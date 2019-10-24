@@ -6,42 +6,27 @@
 lsst.ts.simactuators
 ####################
 
-.. Paragraph that describes what this Python module does and links to related modules and frameworks.
+Python actuator simulators intended for the simulations in Commandable SAL Components (CSCs).
 
-.. .. _lsst.ts.simactuators-using:
+.. _lsst.ts.simactuators-using:
 
-.. Using lsst.ts.simactuators
-.. ==========================
+Using lsst.ts.simactuators
+==========================
 
-.. toctree linking to topics related to using the module's APIs.
+The primary classes are:
 
-.. .. toctree::
-..    :maxdepth: 1
-
-.. _lsst.ts.simactuators-contributing:
+* `PointToPointActuator` simulates a simple actuator that moves to a give position at a constant speed, then stops.
+  Examples include hexapod struts and dome shutters.
+  Note that the ATDome azimuth axis has no position limits, so it is *not* well modeled by this actuator.
+* `TrackingActuator` simulates an actuator that slews to and tracks a path defined by a series of position, velocity, time triplets.
+  Examples include telescope azimuth, altitude and rotator axes.
 
 Contributing
 ============
 
 ``lsst.ts.simactuators`` is developed at https://github.com/lsst-ts/ts_simactuators.
-You can find Jira issues for this module under the `ts_simactuators <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20component%20%3D%20ts_simactuators>`_ component.
+You can find Jira issues for this module using `labels=ts_simactuators <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20labels%20%3D%20ts_simactuators>`_.
 
-.. If there are topics related to developing this module (rather than using it), link to this from a toctree placed here.
-
-.. .. toctree::
-..    :maxdepth: 1
-
-.. .. _lsst.ts.simactuators-scripts:
-
-.. Script reference
-.. ================
-
-.. .. TODO: Add an item to this toctree for each script reference topic in the scripts subdirectory.
-
-.. .. toctree::
-..    :maxdepth: 1
-
-.. .. _lsst.ts.simactuators-pyapi:
 
 Python API reference
 ====================
