@@ -1,0 +1,4 @@
+setupRequired(sconsUtils)
+setupRequired(ts_salobj)
+
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
