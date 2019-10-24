@@ -19,6 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from .tracking_actuator import *
+from .point_to_point_actuator import *
+from . import path
+
 try:
     from .version import *
 except ImportError:
