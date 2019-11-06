@@ -186,9 +186,8 @@ def slew(start_time, start_pos, start_vel, end_pos, end_vel, max_vel, max_accel)
         vPB = vel_mid - end_vel
         dt2 = (rBAi + ((half_end_velAsq - vPB*vPB)/start_accel)) / vPB
 
-    # Compute dt1 and dt3
-    # the following divisions were proved safe from overflow above,
-    # just after computing start_accel and accel3.
+    # Compute dt1 and dt3. Note that the following divisions
+    # were proved safe from overflow above.
     vPA = vPB + end_velA
     dt1 = vPA/start_accel
     dt3 = -vPB/accel3
