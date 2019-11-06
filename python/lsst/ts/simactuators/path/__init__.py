@@ -39,7 +39,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from .path_segment import *
 from .path import *
-from .segment import *
 from .slew import *
 from .stop import *

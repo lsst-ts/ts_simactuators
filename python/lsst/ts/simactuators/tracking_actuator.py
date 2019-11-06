@@ -21,9 +21,9 @@
 
 __all__ = ["TrackingActuator"]
 
-from . import path
-
 from lsst.ts import salobj
+
+from . import path
 
 
 class TrackingActuator:
@@ -41,8 +41,9 @@ class TrackingActuator:
     max_accel : `float`
         Maximum allowed acceleration (deg/sec^2)
     dtmax_track : `float`
-        Maximum allowed tB-tA for `set_cmd` to compute a tracking path (sec);
-        if this limit is not met then `set_cmd` computes a slewing path.
+        Maximum allowed time interval (t - time of last segment)
+        for `set_cmd` to compute a tracking path (sec); if this limit
+        is not met then `set_cmd` computes a slewing path.
         This should be larger than the maximum expected time between calls to
         `set_cmd`, but not much more than that.
     nsettle : `int` (optional)
@@ -50,8 +51,9 @@ class TrackingActuator:
         (meaning ``self.curr.kind`` is tracking)
         before ``self.kind(t)`` reports tracking instead of slewing.
     t : `float` (optional)
-        TAITime for initial `cmd` `TPVAJ` and `curr` `Path` (TAI seconds);
-        if None then use current TAI.
+        Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai())
+        for initial `cmd` `PathSegment` and `curr` `Path`.
+        If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
 
     Raises
@@ -61,7 +63,7 @@ class TrackingActuator:
     """
     Kind = path.Kind
 
-    def __init__(self, min_pos, max_pos, max_vel, max_accel, dtmax_track, nsettle=2, t0=None):
+    def __init__(self, min_pos, max_pos, max_vel, max_accel, dtmax_track, nsettle=2, start_time=None):
         if min_pos >= max_pos:
             raise ValueError(f"min_pos={min_pos} must be < max_pos={max_pos}")
         if max_vel <= 0:
@@ -75,14 +77,15 @@ class TrackingActuator:
         self.dtmax_track = dtmax_track
         self.nsettle = nsettle
 
-        if t0 is None:
-            t0 = salobj.current_tai()
+        if start_time is None:
+            start_time = salobj.current_tai()
         if min_pos <= 0 and 0 < max_pos:
-            pos0 = 0
+            start_pos = 0
         else:
-            pos0 = min_pos
-        self.cmd = path.TPVAJ(t0=t0, pos0=pos0)
-        self.curr = path.Path(path.TPVAJ(t0=t0, pos0=pos0), kind=self.Kind.Stopped)
+            start_pos = min_pos
+        self.cmd = path.PathSegment(start_time=start_time, start_pos=start_pos)
+        self.curr = path.Path(path.PathSegment(start_time=start_time, start_pos=start_pos),
+                              kind=self.Kind.Stopped)
         self._ntrack = 0
 
     def set_cmd(self, pos, vel, t):
@@ -95,33 +98,38 @@ class TrackingActuator:
         vel : `float`
             Velocity (deg/sec)
         t : `float`
-            Time as a unix time, e.g. from `lsst.ts.salobj.current_tai` (sec)
+            Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
         """
-        tA = self.cmd.t0  # last commanded time
-        dt = t - tA
+        start_time = self.cmd.start_time  # last commanded time
+        dt = t - start_time
         newcurr = None
         if dt <= 0:
-            raise RuntimeError(f"New t = {t} <= previous cmd t = {tA}")
+            raise RuntimeError(f"New t = {t} <= previous cmd t = {start_time}")
         if dt < self.dtmax_track:
             # try tracking
-            pcurr_tA, vcurr_tA = self.curr.pva(tA)[0:2]
-            segment = path.Segment(dt=dt, start_pos=pcurr_tA, end_pos=pos, start_vel=vcurr_tA,
-                                   end_vel=vel, do_pos_lim=True)
-            if segment.peak_vel <= self.max_vel and segment.peak_accel <= self.max_accel \
-                    and segment.min_pos >= self.min_pos and segment.max_pos <= self.max_pos:
+            pva_start = self.curr.pva(start_time)
+            segment = path.PathSegment.from_end_conditions(start_time=start_time,
+                                                           start_pos=pva_start.pos,
+                                                           start_vel=pva_start.vel,
+                                                           end_time=t,
+                                                           end_pos=pos,
+                                                           end_vel=vel)
+            limits = segment.limits(t)
+            if limits.max_vel <= self.max_vel and limits.max_accel <= self.max_accel \
+                    and limits.min_pos >= self.min_pos and limits.max_pos <= self.max_pos:
                 # tracking works
                 newcurr = path.Path(
-                    path.TPVAJ(t0=tA, pos0=pcurr_tA, vel0=vcurr_tA,
-                               accel0=segment.start_accel, jerk=segment.jerk),
-                    path.TPVAJ(t0=t, pos0=pos, vel0=vel),
+                    segment,
+                    path.PathSegment(start_time=t, start_pos=pos, start_vel=vel),
                     kind=self.Kind.Tracking)
 
         if newcurr is None:
             # tracking didn't work, so slew
-            pcurr_t, vcurr_t = self.curr.pva(t)[0:2]
-            newcurr = path.slew(t0=t, start_pos=pcurr_t, start_vel=vcurr_t, end_pos=pos, end_vel=vel,
+            pva_t = self.curr.pva(t)
+            newcurr = path.slew(start_time=t, start_pos=pva_t.pos, start_vel=pva_t.vel,
+                                end_pos=pos, end_vel=vel,
                                 max_vel=self.max_vel, max_accel=self.max_accel)
-        self.cmd = path.TPVAJ(t0=t, pos0=pos, vel0=vel)
+        self.cmd = path.PathSegment(start_time=t, start_pos=pos, start_vel=vel)
         self.curr = newcurr
 
     @property
@@ -145,14 +153,16 @@ class TrackingActuator:
         Parameters
         ----------
         t : `float` (optional)
-            Time for initial `cmd` `TPVAJ` and `curr` `Path`;
-            if None then use current TAI.
+            Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            for initial `cmd` `PathSegment` and `curr` `Path`.
+            If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         """
         if t is None:
             t = salobj.current_tai()
-        pos0, vel0 = self.curr.pva(t)[0:2]
-        self.curr = path.stop(pos0=pos0, vel0=vel0, t0=t, max_accel=self.max_accel)
+        pva_t = self.curr.pva(t)
+        self.curr = path.stop(start_pos=pva_t.pos, start_vel=pva_t.vel, start_time=t,
+                              max_accel=self.max_accel)
         self.cmd = self.curr[-1]
 
     def abort(self, t=None, pos=None):
@@ -163,8 +173,9 @@ class TrackingActuator:
         Parameters
         ----------
         t : `float` (optional)
-            Time for initial `cmd` `TPVAJ` and `curr` `Path`;
-            if None then use current TAI.
+            Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai())
+            for initial `cmd` `PathSegment` and `curr` `Path`.
+            If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         pos : `float` (optional)
             Position at which to stop (deg); if `None` then stop at position
@@ -173,8 +184,8 @@ class TrackingActuator:
         if t is None:
             t = salobj.current_tai()
         if pos is None:
-            pos = self.curr.pva(t)[0]
-        self.curr = path.Path(path.TPVAJ(t0=t, pos0=pos), kind=self.Kind.Stopped)
+            pva_t = self.curr.pva(t)
+        self.curr = path.Path(path.PathSegment(start_time=t, start_pos=pva_t.pos), kind=self.Kind.Stopped)
 
     def kind(self, t=None):
         """Kind of path we are currently following.
@@ -193,6 +204,6 @@ class TrackingActuator:
                 return self.Kind.Tracking
             else:
                 return self.Kind.Slewing
-        elif self.curr.kind == self.Kind.Stopping and t > self.curr[-1].t0:
+        elif self.curr.kind == self.Kind.Stopping and t > self.curr[-1].start_time:
             return self.Kind.Stopped
         return self.curr.kind

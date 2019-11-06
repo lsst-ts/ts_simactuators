@@ -31,23 +31,23 @@ from lsst.ts import simactuators
 class SinFunctor:
     """Functor to compute sine wave position and associated velocity
 
-    pos = pos_off + vel_off*(t-t0) + pos_ampl*sin(theta)
+    pos = pos_off + vel_off*(t-start_time) + pos_ampl*sin(theta)
     vel = vel_off + vel_amp*sin(theta)
-    where theta = 2 pi (t-t0) / period
+    where theta = 2 pi (t-start_time) / period
     and vel_ampl = 2 pi ampl / period
     """
-    def __init__(self, pos_off, pos_ampl, vel_off, period, t0):
+    def __init__(self, pos_off, pos_ampl, vel_off, period, start_time):
         assert period > 0
         self.pos_off = pos_off
         self.pos_ampl = pos_ampl
         self.vel_off = vel_off
         self.period = period
-        self.t0 = t0
+        self.start_time = start_time
         self.vel_ampl = self.pos_ampl * 2 * math.pi / self.period
 
     def __call__(self, t):
         """Compute pos, vel at the specified time."""
-        dt = t - self.t0
+        dt = t - self.start_time
         theta = 2*math.pi*dt/self.period
         return (
             self.pos_off + self.vel_off*dt + self.pos_ampl*math.sin(theta),
@@ -64,31 +64,31 @@ class TestTrackingActuator(unittest.TestCase):
         max_accel = 4
         dtmax_track = 0.5
         nsettle = 1
-        t0 = 0.5
+        start_time = 0.5
 
         actuator = simactuators.TrackingActuator(
             min_pos=min_pos, max_pos=max_pos, max_vel=max_vel, max_accel=max_accel,
-            dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+            dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
         self.assertEqual(actuator.min_pos, min_pos)
         self.assertEqual(actuator.max_pos, max_pos)
         self.assertEqual(actuator.max_vel, max_vel)
         self.assertEqual(actuator.max_accel, max_accel)
         self.assertEqual(actuator.dtmax_track, dtmax_track)
         self.assertEqual(actuator.nsettle, nsettle)
-        self.assertEqual(actuator.cmd.t0, t0)
-        self.assertEqual(actuator.cmd.pos0, 0)
-        self.assertEqual(actuator.cmd.vel0, 0)
-        self.assertEqual(actuator.cmd.accel0, 0)
+        self.assertEqual(actuator.cmd.start_time, start_time)
+        self.assertEqual(actuator.cmd.start_pos, 0)
+        self.assertEqual(actuator.cmd.start_vel, 0)
+        self.assertEqual(actuator.cmd.start_accel, 0)
         self.assertEqual(actuator.cmd.jerk, 0)
-        self.assertEqual(actuator.curr[0].t0, t0)
-        self.assertEqual(actuator.curr[0].pos0, 0)
-        self.assertEqual(actuator.curr[0].vel0, 0)
-        self.assertEqual(actuator.curr[0].accel0, 0)
+        self.assertEqual(actuator.curr[0].start_time, start_time)
+        self.assertEqual(actuator.curr[0].start_pos, 0)
+        self.assertEqual(actuator.curr[0].start_vel, 0)
+        self.assertEqual(actuator.curr[0].start_accel, 0)
         self.assertEqual(actuator.curr[0].jerk, 0)
         self.assertEqual(len(actuator.curr), 1)
         self.assertEqual(actuator.curr.kind, actuator.Kind.Stopped)
 
-        # pos0 is 0 if in range [min_pos, max_pos) else min_pos
+        # start_pos is 0 if in range [min_pos, max_pos) else min_pos
         for min_pos, max_pos in itertools.product((-10, 0, 10), (-9, -1, 9)):
             if max_pos <= min_pos:
                 continue
@@ -98,9 +98,10 @@ class TestTrackingActuator(unittest.TestCase):
                 expected_p0 = min_pos
             actuator = simactuators.TrackingActuator(min_pos=min_pos, max_pos=max_pos,
                                                      max_vel=max_vel, max_accel=max_accel,
-                                                     dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
-            self.assertAlmostEqual(actuator.curr[-1].pos0, expected_p0)
-            self.assertAlmostEqual(actuator.cmd.pos0, expected_p0)
+                                                     dtmax_track=dtmax_track, nsettle=nsettle,
+                                                     start_time=start_time)
+            self.assertAlmostEqual(actuator.curr[-1].start_pos, expected_p0)
+            self.assertAlmostEqual(actuator.cmd.start_pos, expected_p0)
 
     def test_constructor_errors(self):
         min_pos = -1
@@ -109,37 +110,37 @@ class TestTrackingActuator(unittest.TestCase):
         max_accel = 4
         dtmax_track = 0.5
         nsettle = 1
-        t0 = 0.5
+        start_time = 0.5
 
         # require min_pos < max_pos
         with self.assertRaises(ValueError):
             simactuators.TrackingActuator(
                 min_pos=max_pos, max_pos=max_pos, max_vel=max_vel, max_accel=max_accel,
-                dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+                dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
         with self.assertRaises(ValueError):
             simactuators.TrackingActuator(
                 min_pos=max_pos + 1, max_pos=max_pos, max_vel=max_vel, max_accel=max_accel,
-                dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+                dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
 
         # require max_vel > 0
         with self.assertRaises(ValueError):
             simactuators.TrackingActuator(
                 min_pos=min_pos, max_pos=max_pos, max_vel=0, max_accel=max_accel,
-                dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+                dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
         with self.assertRaises(ValueError):
             simactuators.TrackingActuator(
                 min_pos=min_pos, max_pos=max_pos, max_vel=-1, max_accel=max_accel,
-                dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+                dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
 
         # require max_accel > 0
         with self.assertRaises(ValueError):
             simactuators.TrackingActuator(
                 min_pos=min_pos, max_pos=max_pos, max_vel=max_vel, max_accel=0,
-                dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+                dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
         with self.assertRaises(ValueError):
             simactuators.TrackingActuator(
                 min_pos=min_pos, max_pos=max_pos, max_vel=max_vel, max_accel=-1,
-                dtmax_track=dtmax_track, nsettle=nsettle, t0=t0)
+                dtmax_track=dtmax_track, nsettle=nsettle, start_time=start_time)
 
     def test_matched_start(self):
         """Test slew_cmd for a sine path where initial position and velocity
@@ -205,7 +206,7 @@ class TestTrackingActuator(unittest.TestCase):
                 actuator = simactuators.TrackingActuator(
                     min_pos=-100, max_pos=100,
                     max_vel=5, max_accel=10,
-                    dtmax_track=0.05, nsettle=1, t0=0)
+                    dtmax_track=0.05, nsettle=1, start_time=0)
                 self.assertEqual(actuator.kind(0), actuator.Kind.Stopped)
                 for i in range(5):
                     t = i*cmd_interval + 1  # +1 to avoid 0
@@ -215,23 +216,23 @@ class TestTrackingActuator(unittest.TestCase):
 
                 # expected starting position and velocity for the halt
                 t_start_halt = t + cmd_interval
-                p_start_halt, v_start_halt = actuator.curr.pva(t_start_halt)[0:2]
+                pva_before_stop = actuator.curr.pva(t_start_halt)
                 actuator.stop(t=t_start_halt)
                 self.assertEqual(actuator.kind(t_start_halt), actuator.Kind.Stopping)
-                pcurr_t, vcurr_t = actuator.curr.pva(t_start_halt)[0:2]
-                self.assertAlmostEqual(pcurr_t, p_start_halt)
-                self.assertAlmostEqual(vcurr_t, v_start_halt)
+                pva_start_halt = actuator.curr.pva(t_start_halt)
+                self.assertAlmostEqual(pva_before_stop.pos, pva_start_halt.pos)
+                self.assertAlmostEqual(pva_before_stop.vel, pva_start_halt.vel)
 
                 # the ending velocity and acceleration are, of course, 0
                 # and the curr and cmd positions should match at the end
-                t_end_halt = actuator.curr[-1].t0
-                p_end_halt, v_end_halt, a_end_halt = actuator.curr.pva(t_end_halt)
-                self.assertEqual(v_end_halt, 0)
-                self.assertEqual(a_end_halt, 0)
-                pcmd, vcmd, acmd = actuator.cmd.pva(t)
-                self.assertAlmostEqual(pcmd, p_end_halt)
-                self.assertEqual(vcmd, 0)
-                self.assertEqual(acmd, 0)
+                t_end_halt = actuator.curr[-1].start_time
+                pva_end_halt = actuator.curr.pva(t_end_halt)
+                self.assertEqual(pva_end_halt.vel, 0)
+                self.assertEqual(pva_end_halt.accel, 0)
+                cmd_pva_end_halt = actuator.cmd.pva(t=t_end_halt)
+                self.assertAlmostEqual(cmd_pva_end_halt.pos, pva_end_halt.pos)
+                self.assertEqual(cmd_pva_end_halt.vel, 0)
+                self.assertEqual(cmd_pva_end_halt.accel, 0)
                 self.assertGreater(t_end_halt, t_start_halt)
                 # the end kind should be Stopped;
                 # add a margin to the time  to avoid roundoff error
@@ -246,7 +247,7 @@ class TestTrackingActuator(unittest.TestCase):
                 actuator = simactuators.TrackingActuator(
                     min_pos=-100, max_pos=100,
                     max_vel=5, max_accel=10,
-                    dtmax_track=0.05, nsettle=1, t0=0)
+                    dtmax_track=0.05, nsettle=1, start_time=0)
                 self.assertEqual(actuator.kind(0), actuator.Kind.Stopped)
                 for i in range(5):
                     t = i*cmd_interval + 1  # +1 to avoid 0
@@ -256,19 +257,19 @@ class TestTrackingActuator(unittest.TestCase):
 
                 # expected starting position and velocity for the halt
                 t_abort = t + cmd_interval
-                p_start_halt, v_start_halt = actuator.curr.pva(t_abort)[0:2]
+                pva_before_abort = actuator.curr.pva(t_abort)
                 actuator.abort(t=t_abort)
                 self.assertEqual(actuator.kind(t_abort), actuator.Kind.Stopped)
-                pcurr_t, vcurr_t = actuator.curr.pva(t_abort)[0:2]
-                self.assertAlmostEqual(pcurr_t, p_start_halt)
-                self.assertAlmostEqual(vcurr_t, 0)
+                pva_abort = actuator.curr.pva(t_abort)
+                self.assertAlmostEqual(pva_before_abort.pos, pva_abort.pos)
+                self.assertAlmostEqual(pva_abort.vel, 0)
                 self.assertEqual(len(actuator.curr), 1)
 
                 # abort does not change actuator.cmd
-                cmd_pos, cmd_vel = actuator.cmd.pva(t_abort)[0:2]
+                cmd_pva_abort = actuator.cmd.pva(t_abort)
                 desired_cmd_pos = pos_off + t_abort*vel_off
-                self.assertAlmostEqual(cmd_pos, desired_cmd_pos)
-                self.assertAlmostEqual(cmd_vel, vel_off)
+                self.assertAlmostEqual(cmd_pva_abort.pos, desired_cmd_pos)
+                self.assertAlmostEqual(cmd_pva_abort.vel, vel_off)
 
     def check_sin_path(self, pos_off, pos_ampl, vel_off, period, frac_phase, cmd_interval,
                        min_pos, max_pos, max_vel, max_accel, nsettle, max_nslew,
@@ -325,20 +326,20 @@ class TestTrackingActuator(unittest.TestCase):
             pos_ampl=pos_ampl,
             vel_off=vel_off/2,
             period=period,
-            t0=frac_phase*period,
+            start_time=frac_phase*period,
         )
-        pos0, vel0 = sinfunc(0)
+        start_pos, start_vel = sinfunc(0)
         actuator = simactuators.TrackingActuator(
             min_pos=min_pos, max_pos=max_pos,
             max_vel=max_vel, max_accel=max_accel,
             dtmax_track=dtmax_track, nsettle=nsettle,
-            t0=-cmd_interval)  # so we can start with tracking, of possible
+            start_time=-cmd_interval)  # so we can start with tracking, of possible
         self.assertEqual(len(actuator.curr), 1)
-        actuator.curr[0].pos0 = pos0 - pos_off
-        actuator.curr[0].vel0 = vel0 - vel_off
-        self.assertEqual(actuator.curr[0].accel0, 0)
+        actuator.curr[0].start_pos = start_pos - pos_off
+        actuator.curr[0].start_vel = start_vel - vel_off
+        self.assertEqual(actuator.curr[0].start_accel, 0)
         self.assertEqual(actuator.curr.kind, actuator.Kind.Stopped)
-        actuator.curr[0].t0 = 0
+        actuator.curr[0].start_time = 0
         pos_errors = []
         vel_errors = []
         curr_vels = []
@@ -367,22 +368,22 @@ class TestTrackingActuator(unittest.TestCase):
                     self.fail(f"Slew found after tracking: nslew={nslew}; ntrack={ntrack}")
 
             # check that the commanded PVT was properly recorded
-            cmd_pos, cmd_vel, cmd_accel = actuator.cmd.pva(cmd_t)
-            self.assertAlmostEqual(cmd_pos, pos)
-            self.assertAlmostEqual(cmd_vel, vel)
-            self.assertAlmostEqual(cmd_accel, 0)
+            cmd_pva = actuator.cmd.pva(cmd_t)
+            self.assertAlmostEqual(cmd_pva.pos, pos)
+            self.assertAlmostEqual(cmd_pva.vel, vel)
+            self.assertAlmostEqual(cmd_pva.accel, 0)
 
             # Check tracking error, once we have settled
             # (when actuator.kind(t) says we are tracking)
             if actuator.kind(cmd_t) == actuator.Kind.Tracking:
                 for frac_dt in (-0.6, -0.3, 0, 0.3, 0.6):
                     test_t = cmd_interval*frac_dt + cmd_t
-                    cmd_pos, cmd_vel, cmd_accel = actuator.cmd.pva(test_t)
-                    curr_pos, curr_vel, curr_accel = actuator.curr.pva(test_t)
-                    pos_errors.append(curr_pos - cmd_pos)
-                    vel_errors.append(curr_vel - cmd_vel)
-                    curr_vels.append(curr_vel)
-                    curr_accels.append(curr_accel)
+                    cmd_pva = actuator.cmd.pva(test_t)
+                    curr_pva = actuator.curr.pva(test_t)
+                    pos_errors.append(curr_pva.pos - cmd_pva.pos)
+                    vel_errors.append(curr_pva.vel - cmd_pva.vel)
+                    curr_vels.append(curr_pva.vel)
+                    curr_accels.append(curr_pva.accel)
         pos_err = np.abs(pos_errors).max()
         vel_err = np.abs(vel_errors).max()
         max_vel = np.abs(curr_vels).max()

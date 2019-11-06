@@ -23,20 +23,21 @@ __all__ = ["stop"]
 
 import math
 
+from . import path_segment
 from . import path
 
 
-def stop(pos0, vel0, t0, max_accel):
+def stop(start_time, start_pos, start_vel, max_accel):
     """Compute a path to stop as quickly as possible.
 
     Parameters
     ----------
-    pos0 : `float`
-        Starting position (deg)
-    vel0 : `float`
-        Starting velocity (deg/sec)
-    t0 : `float`
+    start_time : `float`
         Start time of path.
+    start_pos : `float`
+        Starting position (deg)
+    start_vel : `float`
+        Starting velocity (deg/sec)
     max_accel : `float`
         Maximum allowed acceleration (deg/sec^2)
 
@@ -53,21 +54,23 @@ def stop(pos0, vel0, t0, max_accel):
     if max_accel <= 0.0:
         raise ValueError(f"max_accel={max_accel} < 0")
 
-    if vel0 == 0:
-        return path.Path(path.TPVAJ(t0=t0, pos0=pos0), kind=path.Kind.Stopped)
+    if start_vel == 0:
+        return path.Path(path_segment.PathSegment(start_time=start_time, start_pos=start_pos),
+                         kind=path.Kind.Stopped)
 
-    tpvajs = []
-    # t0 is typically large enough that small time changes
+    segments = []
+    # start_time is typically large enough that small time changes
     # have poor accuracy, so to improve accuracy
-    # compute the path segments using t0 = 0
+    # compute the path segments using start_time = 0
     # then offset all the times before returning the path
-    dt = abs(vel0)/max_accel
-    accel = -math.copysign(max_accel, vel0)
-    p1 = pos0 + dt*(vel0 + dt*0.5*accel)
-    tpvajs.append(path.TPVAJ(t0=0, pos0=pos0, vel0=vel0, accel0=accel))
-    tpvajs.append(path.TPVAJ(t0=dt, pos0=p1, vel0=0))
+    dt = abs(start_vel)/max_accel
+    accel = -math.copysign(max_accel, start_vel)
+    p1 = start_pos + dt*(start_vel + dt*0.5*accel)
+    segments.append(path_segment.PathSegment(start_time=0, start_pos=start_pos,
+                                             start_vel=start_vel, start_accel=accel))
+    segments.append(path_segment.PathSegment(start_time=dt, start_pos=p1, start_vel=0))
 
-    for tpvaj in tpvajs:
-        tpvaj.t0 += t0
+    for tpvaj in segments:
+        tpvaj.start_time += start_time
 
-    return path.Path(*tpvajs, kind=path.Kind.Stopping)
+    return path.Path(*segments, kind=path.Kind.Stopping)

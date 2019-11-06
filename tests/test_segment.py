@@ -29,55 +29,68 @@ import numpy as np
 from lsst.ts import simactuators
 
 
-class TestSegment(unittest.TestCase):
-    def check_segment(self, start_pos, start_vel, end_pos, end_vel, dt):
-        """Check that a segment meets is constructor conditions
+class TestPathSegment(unittest.TestCase):
+    def check_from_end_conditions(self, start_pos, start_vel, end_pos, end_vel, dt):
+        """Check PathSegment from_end_conditions and limits methods.
         """
-        segment = simactuators.path.Segment(dt=dt, start_pos=start_pos, start_vel=start_vel,
-                                            end_pos=end_pos, end_vel=end_vel, do_pos_lim=True)
-        self.assertAlmostEqual(segment.dt, dt)
+        start_time = 45.3  # any value will do
+        end_time = start_time + dt
+        segment = simactuators.path.PathSegment.from_end_conditions(
+            start_time=start_time, start_pos=start_pos, start_vel=start_vel,
+            end_time=end_time, end_pos=end_pos, end_vel=end_vel)
+        self.assertAlmostEqual(segment.start_time, start_time)
         self.assertAlmostEqual(segment.start_pos, start_pos)
-        self.assertAlmostEqual(segment.end_pos, end_pos)
         self.assertAlmostEqual(segment.start_vel, start_vel)
-        self.assertAlmostEqual(segment.end_vel, end_vel)
+
+        pva_end = segment.pva(end_time)
+        self.assertAlmostEqual(pva_end.pos, end_pos)
+        self.assertAlmostEqual(pva_end.vel, end_vel)
         start_accel = segment.start_accel
         jerk = segment.jerk
         desired_end_pos = start_pos + dt*(start_vel + dt*(0.5*start_accel + dt*(1/6)*jerk))
         desired_end_vel = start_vel + dt*(start_accel + dt*0.5*jerk)
-        self.assertAlmostEqual(segment.end_pos, desired_end_pos)
-        self.assertAlmostEqual(segment.end_vel, desired_end_vel)
+        self.assertAlmostEqual(pva_end.pos, desired_end_pos)
+        self.assertAlmostEqual(pva_end.vel, desired_end_vel)
 
-        # estimate limits by computing at many points
-        desired_pmin = min(start_pos, end_pos)
-        desired_pmax = max(start_pos, end_pos)
-        desired_vpeak = max(abs(start_vel), abs(end_vel))
+        # estimate position and velocity limits by computing at many points
+        desired_min_pos = min(start_pos, end_pos)
+        desired_max_pos = max(start_pos, end_pos)
+        desired_max_vel = max(abs(start_vel), abs(end_vel))
         for t in np.linspace(start=0, stop=dt, num=100):
             pt = start_pos + t*(start_vel + t*(0.5*start_accel + t*jerk/6))
             vt = start_vel + t*(start_accel + t*0.5*jerk)
-            desired_pmin = min(pt, desired_pmin)
-            desired_pmax = max(pt, desired_pmax)
-            desired_vpeak = max(abs(vt), desired_vpeak)
-        self.assertAlmostEqual(segment.min_pos, desired_pmin, places=3)
-        self.assertAlmostEqual(segment.max_pos, desired_pmax, places=3)
-        self.assertAlmostEqual(segment.peak_vel, desired_vpeak, places=3)
-
+            desired_min_pos = min(pt, desired_min_pos)
+            desired_max_pos = max(pt, desired_max_pos)
+            desired_max_vel = max(abs(vt), desired_max_vel)
         aB = start_accel + dt*jerk
-        desired_apeak = max(abs(start_accel), abs(aB))
-        self.assertAlmostEqual(segment.peak_accel, desired_apeak)
+        desired_max_accel = max(abs(start_accel), abs(aB))
+
+        limits = segment.limits(end_time)
+        self.assertAlmostEqual(limits.min_pos, desired_min_pos, places=3)
+        self.assertAlmostEqual(limits.max_pos, desired_max_pos, places=3)
+        self.assertAlmostEqual(limits.max_vel, desired_max_vel, places=3)
+        self.assertAlmostEqual(limits.max_accel, desired_max_accel)
 
     def test_basics(self):
-        # start_pos, start_vel, end_pos, end_vel, dt, do_pos_lim
         for start_pos, start_vel, end_pos, end_vel, dt in itertools.product(
             (0, -0.5, 0.2), (0, -0.2, 0.1), (0, 0.3, -0.6), (0, 0.3, -0.2), (1, 5),
         ):
-            self.check_segment(dt=dt, start_pos=start_pos, start_vel=start_vel,
-                               end_pos=end_pos, end_vel=end_vel)
+            self.check_from_end_conditions(dt=dt, start_pos=start_pos, start_vel=start_vel,
+                                           end_pos=end_pos, end_vel=end_vel)
 
     def test_invalid_inputs(self):
+        """Test invalid inputs for PathSegment.from_end_conditions.
+
+        The only thing that can go wrong is end_time - start_time <= 0.
+        """
         for dt in (0, math.sqrt(sys.float_info.min)):
+            start_time = 51.0  # arbitrary
+            end_time = start_time + dt
+
             with self.assertRaises(ValueError):
-                simactuators.path.Segment(dt=dt, start_pos=1, start_vel=2,
-                                          end_pos=1, end_vel=2, do_pos_lim=True)
+                simactuators.path.PathSegment.from_end_conditions(
+                    start_time, start_pos=1, start_vel=2,
+                    end_time=end_time, end_pos=1, end_vel=2)
 
 
 if __name__ == '__main__':
