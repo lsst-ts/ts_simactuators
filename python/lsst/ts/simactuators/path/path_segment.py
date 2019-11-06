@@ -113,16 +113,13 @@ class PathSegment:
             If end_time - start_time <= 0.
         """
         dt = end_time - start_time
-        # Test for overflow of vx, start_accel, and jerk.
-        # This test assumes |numerator| < sqrt(bignum),
-        # and tests |denominator| > sqrt(smallnum).
-        # Use <= to simplify unit tests.
+        # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
             raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
 
-        vx = (end_pos - start_pos) / dt
-        start_accel = (3*vx - (2*start_vel + end_vel))*2/dt
-        jerk = (((start_vel + end_vel)/2) - vx)*12/(dt*dt)
+        mean_vel = (end_pos - start_pos) / dt
+        start_accel = (3*mean_vel - (2*start_vel + end_vel))*2/dt
+        jerk = (((start_vel + end_vel)/2) - mean_vel)*12/(dt*dt)
 
         return cls(start_time=start_time,
                    start_pos=start_pos,
@@ -142,12 +139,15 @@ class PathSegment:
         -------
         limits : `Limits`
             Motion limits between start and end time, inclusive.
+
+        Raises
+        ------
+        ValueError
+            If ``end_time - self.start_time <= math.sqrt(sys.float_info.min)``
+            (to avoid overflow).
         """
         dt = end_time - self.start_time
-        # Test for overflow of vx, start_accel, and jerk.
-        # This test assumes |numerator| < sqrt(bignum),
-        # and tests |denominator| > sqrt(smallnum).
-        # Use <= to simplify unit tests.
+        # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
             raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
 
@@ -213,7 +213,7 @@ class PathSegment:
 
         Returns
         -------
-        pva : PosVelAccel
+        pva : `PosVelAccel`
             Position, velocity and acceleration at the specified time.
         """
         dt = t - self.start_time

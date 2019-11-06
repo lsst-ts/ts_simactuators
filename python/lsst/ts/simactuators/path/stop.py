@@ -49,7 +49,8 @@ def stop(start_time, start_pos, start_vel, max_accel):
 
     Raises
     ------
-    ValueError if |max_accel| <= 0
+    ValueError
+        If |max_accel| <= 0
     """
     if max_accel <= 0.0:
         raise ValueError(f"max_accel={max_accel} < 0")
@@ -59,7 +60,7 @@ def stop(start_time, start_pos, start_vel, max_accel):
                          kind=path.Kind.Stopped)
 
     segments = []
-    # start_time is typically large enough that small time changes
+    # start_time is large enough that small time changes
     # have poor accuracy, so to improve accuracy
     # compute the path segments using start_time = 0
     # then offset all the times before returning the path

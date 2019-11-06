@@ -41,13 +41,26 @@ class Path:
     ----------
     segments : ``iterable`` of `PathSegment`
         Segments in the path. For the `pva` method to work correctly,
-        times must be in increasing order, but this is not checked.
+        times must be in increasing order.
     kind : `Kind`
         Kind of path
+
+    Raises
+    ------
+    ValueError
+        If no segments are supplied
+        or the segments do not have increasing start_times.
     """
     def __init__(self, *segments, kind):
         if len(segments) < 1:
-            raise RuntimeError(f"segments={segments} needs at least one element")
+            raise ValueError(f"segments={segments} needs at least one element")
+        prev_t_start = None
+        for segment in segments:
+            if prev_t_start is not None:
+                if segment.start_time <= prev_t_start:
+                    raise ValueError(f"segment start times not in increasing order")
+                prev_t_start = segment.start_time
+
         self.segments = segments
         self.kind = Kind(kind)
         self.ts = [segment.start_time for segment in segments]
@@ -63,7 +76,7 @@ class Path:
         Returns
         -------
         pva : `PosVelAccel`
-            Position, velocity and acceleration at time ``t``,
+            Position, velocity and acceleration at the specified time,
             extrapolated if necessary.
         """
         ind = bisect.bisect(self.ts, t)
