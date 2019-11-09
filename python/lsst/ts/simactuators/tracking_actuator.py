@@ -27,8 +27,8 @@ from . import path
 
 
 class TrackingActuator:
-    """Simulate an actuator that slews to and tracks a path defined
-    by regular position, velocity, time updates.
+    """Simulate an actuator that slews to and tracks a path defined by
+    regular calls to `set_cmd`, specifying position, velocity and time.
 
     Parameters
     ----------
@@ -51,8 +51,8 @@ class TrackingActuator:
         (meaning ``self.curr.kind`` is tracking)
         before ``self.kind(t)`` reports tracking instead of slewing.
     t : `float` (optional)
-        Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai())
-        for initial `cmd` `PathSegment` and `curr` `Path`.
+        Initial time for the ``self.cmd`` path segment and ``self.curr`` path
+        (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
 
@@ -60,6 +60,13 @@ class TrackingActuator:
     ------
     ValueError
         If ``min_pos >= max_pos``, ``max_vel <= 0``, or ``max_accel <= 0``.
+
+    Notes
+    -----
+    Attributes:
+
+    * ``cmd``: commanded path set by `set_cmd` (a `path.PathSegment`).
+    * ``curr``: the current path (a `path.Path`).
     """
     Kind = path.Kind
 
@@ -89,7 +96,10 @@ class TrackingActuator:
         self._ntrack = 0
 
     def set_cmd(self, pos, vel, t):
-        """Set commanded position and velocity.
+        """Set a commanded position, velocity and time.
+
+        The actuator will track, if possible, else slew to match the specified
+        path.
 
         Parameters
         ----------
@@ -99,12 +109,29 @@ class TrackingActuator:
             Velocity (deg/sec)
         t : `float`
             Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+
+        Raises
+        ------
+        ValueError
+            If ``t <= t.cmd.start_time``,
+            where ``self.cmd.start_time`` is the time of
+            the previous call to `set_cmd`.
+
+        Notes
+        -----
+        The actuator will track if the following is true:
+
+        * ``t - t.cmd.start_time < self.dtmax_track``
+          where ``self.cmd.start_time`` is the time of
+          the previous call to `set_cmd`.
+        * The tracking segment path obeys the position, velocity
+          and acceleration limits.
         """
         start_time = self.cmd.start_time  # last commanded time
         dt = t - start_time
         newcurr = None
         if dt <= 0:
-            raise RuntimeError(f"New t = {t} <= previous cmd t = {start_time}")
+            raise ValueError(f"New t = {t} <= previous cmd t = {start_time}")
         if dt < self.dtmax_track:
             # try tracking
             pva_start = self.curr.pva(start_time)
@@ -153,8 +180,8 @@ class TrackingActuator:
         Parameters
         ----------
         t : `float` (optional)
-            Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
-            for initial `cmd` `PathSegment` and `curr` `Path`.
+            Initial time for ``self.cmd`` path segment and ``self.curr`` path
+            (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         """
@@ -173,8 +200,8 @@ class TrackingActuator:
         Parameters
         ----------
         t : `float` (optional)
-            Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai())
-            for initial `cmd` `PathSegment` and `curr` `Path`.
+            Initial time for ``self.cmd`` path segment and ``self.curr`` path
+            (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         pos : `float` (optional)
@@ -188,9 +215,17 @@ class TrackingActuator:
         self.curr = path.Path(path.PathSegment(start_time=t, start_pos=pva_t.pos), kind=self.Kind.Stopped)
 
     def kind(self, t=None):
-        """Kind of path we are currently following.
+        """Kind of path at the specified time.
 
-        The answer will match ``self.curr.kind`` except as follows:
+        Parameters
+        ----------
+        t : `float` (optional)
+            Time at which to evaluate the kind of path
+            (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            If None then use current TAI.
+            Ignored unless stopping.
+
+        The result will always match ``self.curr.kind`` except as follows:
 
         - After a slew we report ``path.kind.Slewing`` until ``nsettle``
           consecutive calls to `set_cmd` result in a path that is tracking.

@@ -79,6 +79,11 @@ class PointToPointActuator:
 
     def set_pos(self, pos):
         """Set a new desired position.
+
+        Raises
+        ------
+        ValueError
+            If pos < self.min_pos or > self.max_pos.
         """
         if pos < self.min_pos or pos > self.max_pos:
             raise ValueError(f"pos={pos} not in range [{self.min_pos}, {self.max_pos}]")

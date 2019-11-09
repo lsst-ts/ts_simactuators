@@ -113,6 +113,7 @@ def slew(start_time, start_pos, start_vel, end_pos, end_vel, max_vel, max_accel)
 
     # Compute end_velA, half_end_velAsq, sign_rBAi and sign_end_velA
     # and handle null slews (rBAi and end_velA both zero).
+    # "A" refers to the initial path (start_pos, etc.) and "B" to the end path.
     rBAi = end_pos - start_pos
     end_velA = end_vel - start_vel
     half_end_velAsq = 0.5*end_velA*end_velA
