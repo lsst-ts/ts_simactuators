@@ -28,7 +28,7 @@ from . import path
 
 class TrackingActuator:
     """Simulate an actuator that slews to and tracks a path defined by
-    regular calls to `set_cmd`, specifying position, velocity and time.
+    regular calls to `set_target`.
 
     Parameters
     ----------
@@ -42,16 +42,16 @@ class TrackingActuator:
         Maximum allowed acceleration (deg/sec^2)
     dtmax_track : `float`
         Maximum allowed time interval (tai - time of last segment)
-        for `set_cmd` to compute a tracking path (sec); if this limit
-        is not met then `set_cmd` computes a slewing path.
+        for `set_target` to compute a tracking path (sec); if this limit
+        is not met then `set_target` computes a slewing path.
         This should be larger than the maximum expected time between calls to
-        `set_cmd`, but not much more than that.
+        `set_target`, but not much more than that.
     nsettle : `int` (optional)
-        Number of calls to `set_cmd` after a slew finishes
-        (meaning ``self.curr.kind`` is tracking)
+        Number of calls to `set_target` after a slew finishes
+        (meaning ``self.current.kind`` is tracking)
         before ``self.kind(tai)`` reports tracking instead of slewing.
     tai : `float` (optional)
-        Initial time for the ``self.cmd`` path segment and ``self.curr`` path
+        Initial time for the ``self.target`` and ``self.current``
         (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
@@ -65,8 +65,8 @@ class TrackingActuator:
     -----
     Attributes:
 
-    * ``cmd``: commanded path set by `set_cmd` (a `path.PathSegment`).
-    * ``curr``: the current path (a `path.Path`).
+    * ``target``: target set by `set_target` (a `path.PathSegment`).
+    * ``current``: the current path (a `path.Path`).
     """
     Kind = path.Kind
 
@@ -90,13 +90,13 @@ class TrackingActuator:
             pos = 0
         else:
             pos = min_pos
-        self.cmd = path.PathSegment(tai=tai, pos=pos)
-        self.curr = path.Path(path.PathSegment(tai=tai, pos=pos),
-                              kind=self.Kind.Stopped)
+        self.target = path.PathSegment(tai=tai, pos=pos)
+        self.current = path.Path(path.PathSegment(tai=tai, pos=pos),
+                                 kind=self.Kind.Stopped)
         self._ntrack = 0
 
-    def set_cmd(self, tai, pos, vel):
-        """Set a commanded position, velocity and time.
+    def set_target(self, tai, pos, vel):
+        """Set the target position, velocity and time.
 
         The actuator will track, if possible, else slew to match the specified
         path.
@@ -113,28 +113,28 @@ class TrackingActuator:
         Raises
         ------
         ValueError
-            If ``tai <= self.cmd.tai``,
-            where ``self.cmd.tai`` is the time of
-            the previous call to `set_cmd`.
+            If ``tai <= self.target.tai``,
+            where ``self.target.tai`` is the time of
+            the previous call to `set_target`.
 
         Notes
         -----
         The actuator will track if the following is true:
 
-        * ``tai - self.cmd.tai < self.dtmax_track``
-          where ``self.cmd.tai`` is the time of
-          the previous call to `set_cmd`.
+        * ``tai - self.target.tai < self.dtmax_track``
+          where ``self.target.tai`` is the time of
+          the previous call to `set_target`.
         * The tracking segment path obeys the position, velocity
           and acceleration limits.
         """
-        prev_tai = self.cmd.tai  # last commanded time
+        prev_tai = self.target.tai  # last commanded time
         dt = tai - prev_tai
         newcurr = None
         if dt <= 0:
-            raise ValueError(f"New tai = {tai} <= previous cmd tai = {prev_tai}")
+            raise ValueError(f"New tai = {tai} <= previous target tai = {prev_tai}")
         if dt < self.dtmax_track:
             # Try tracking.
-            prev_segment = self.curr.at(prev_tai)
+            prev_segment = self.current.at(prev_tai)
             tracking_segment = path.PathSegment.from_end_conditions(
                 start_tai=prev_tai,
                 start_pos=prev_segment.pos,
@@ -152,22 +152,22 @@ class TrackingActuator:
 
         if newcurr is None:
             # Tracking didn't work, so slew.
-            curr_segment = self.curr.at(tai)
+            curr_segment = self.current.at(tai)
             newcurr = path.slew(tai=tai, start_pos=curr_segment.pos, start_vel=curr_segment.vel,
                                 end_pos=pos, end_vel=vel,
                                 max_vel=self.max_vel, max_accel=self.max_accel)
-        self.cmd = path.PathSegment(tai=tai, pos=pos, vel=vel)
-        self.curr = newcurr
+        self.target = path.PathSegment(tai=tai, pos=pos, vel=vel)
+        self.current = newcurr
 
     @property
-    def curr(self):
+    def current(self):
         """Get or set the current path, a `path.Path`."""
         return self._curr
 
-    @curr.setter
-    def curr(self, curr):
-        self._curr = curr
-        if curr.kind == self.Kind.Tracking:
+    @current.setter
+    def current(self, current):
+        self._curr = current
+        if current.kind == self.Kind.Tracking:
             self._ntrack += 1
         else:
             self._ntrack = 0
@@ -180,17 +180,17 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float` (optional)
-            Initial time for ``self.cmd`` path segment and ``self.curr`` path
+            Initial time for ``self.target`` and ``self.current``
             (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         """
         if tai is None:
             tai = salobj.current_tai()
-        curr_segment = self.curr.at(tai)
-        self.curr = path.stop(pos=curr_segment.pos, vel=curr_segment.vel, tai=tai,
-                              max_accel=self.max_accel)
-        self.cmd = self.curr[-1]
+        curr_segment = self.current.at(tai)
+        self.current = path.stop(pos=curr_segment.pos, vel=curr_segment.vel, tai=tai,
+                                 max_accel=self.max_accel)
+        self.target = self.current[-1]
 
     def abort(self, tai=None, pos=None):
         """Stop motion immediately, with infinite acceleration.
@@ -200,7 +200,7 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float` (optional)
-            Initial time for ``self.cmd`` path segment and ``self.curr`` path
+            Initial time for ``self.target`` and ``self.current``
             (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
@@ -211,8 +211,8 @@ class TrackingActuator:
         if tai is None:
             tai = salobj.current_tai()
         if pos is None:
-            pos = self.curr.at(tai).pos
-        self.curr = path.Path(path.PathSegment(tai=tai, pos=pos), kind=self.Kind.Stopped)
+            pos = self.current.at(tai).pos
+        self.current = path.Path(path.PathSegment(tai=tai, pos=pos), kind=self.Kind.Stopped)
 
     def kind(self, tai=None):
         """Kind of path at the specified time.
@@ -225,20 +225,20 @@ class TrackingActuator:
             If None then use current TAI.
             Ignored unless stopping.
 
-        The result will always match ``self.curr.kind`` except as follows:
+        The result will always match ``self.current.kind`` except as follows:
 
         - After a slew we report ``path.kind.Slewing`` until ``nsettle``
-          consecutive calls to `set_cmd` result in a path that is tracking.
-        - if self.curr.kind is stopping and tai > start time of last segment,
-          the kind is reported as stopped.
+          consecutive calls to `set_target` result in a path that is tracking.
+        - if self.current.kind is stopping and tai > start time
+          of last segment then the kind is reported as stopped.
         """
         if tai is None:
             tai = salobj.current_tai()
-        if self.curr.kind == self.Kind.Tracking:
+        if self.current.kind == self.Kind.Tracking:
             if self._ntrack > self.nsettle:
                 return self.Kind.Tracking
             else:
                 return self.Kind.Slewing
-        elif self.curr.kind == self.Kind.Stopping and tai > self.curr[-1].tai:
+        elif self.current.kind == self.Kind.Stopping and tai > self.current[-1].tai:
             return self.Kind.Stopped
-        return self.curr.kind
+        return self.current.kind
