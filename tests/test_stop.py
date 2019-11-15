@@ -26,7 +26,7 @@ from lsst.ts import simactuators
 
 
 class TestStop(unittest.TestCase):
-    def check_path(self, path, start_time, start_pos, start_vel, max_accel):
+    def check_path(self, path, tai, pos, vel, max_accel):
         """Check various aspects of a path
 
         Checks the following:
@@ -41,76 +41,76 @@ class TestStop(unittest.TestCase):
         ----------
         path : `Path`
             Path to check
-        start_time : `float`
-            Initial time (unix seconds, e.g. from time.time())
-        start_pos : `float` (optional)
-            Initial position (deg)
-        start_vel : `float` (optional)
-            Initial velocity (deg/sec)
+        tai : `float`
+            TAI time (unix seconds, e.g. from time.time())
+        pos : `float` (optional)
+            Position at ``tai`` (deg)
+        vel : `float` (optional)
+            Velocity at ``tai`` (deg/sec)
         max_accel : `float` (optional)
             Maximum allowed acceleration (deg/sec^2)
         """
-        self.assertAlmostEqual(path[0].start_time, start_time)
-        self.assertAlmostEqual(path[0].start_pos, start_pos)
-        self.assertAlmostEqual(path[0].start_vel, start_vel)
+        self.assertAlmostEqual(path[0].tai, tai)
+        self.assertAlmostEqual(path[0].pos, pos)
+        self.assertAlmostEqual(path[0].vel, vel)
 
         self.assertIn(len(path), (1, 2))
 
-        self.assertEqual(path[-1].start_vel, 0)
-        self.assertEqual(path[-1].start_accel, 0)
+        self.assertEqual(path[-1].vel, 0)
+        self.assertEqual(path[-1].accel, 0)
 
         if len(path) > 1:
             pvat0 = path[0]
             pvat1 = path[1]
-            dt = pvat1.start_time - pvat0.start_time
+            dt = pvat1.tai - pvat0.tai
             self.assertGreater(dt, 0)
-            pred_p1 = pvat0.start_pos + dt*(pvat0.start_vel + dt*0.5*pvat0.start_accel)
-            pred_v1 = pvat0.start_vel + dt*pvat0.start_accel
-            self.assertAlmostEqual(pvat1.start_pos, pred_p1, places=4)
-            self.assertAlmostEqual(pvat1.start_vel, pred_v1, places=4)
+            pred_p1 = pvat0.pos + dt*(pvat0.vel + dt*0.5*pvat0.accel)
+            pred_v1 = pvat0.vel + dt*pvat0.accel
+            self.assertAlmostEqual(pvat1.pos, pred_p1, places=4)
+            self.assertAlmostEqual(pvat1.vel, pred_v1, places=4)
 
     def test_slew_to_stop(self):
-        start_time = 1550000000
+        tai = 1550000000
         max_accel = 10
 
-        for start_pos, start_vel in itertools.product(
+        for pos, vel in itertools.product(
             (-5, 0, 30), (-3, -1, 2, 4),
         ):
-            path = simactuators.path.stop(start_time=start_time, start_pos=start_pos,
-                                          start_vel=start_vel, max_accel=max_accel)
+            path = simactuators.path.stop(tai=tai, pos=pos,
+                                          vel=vel, max_accel=max_accel)
             self.assertEqual(path.kind, simactuators.path.Kind.Stopping)
             self.assertEqual(len(path), 2)
-            self.check_path(path, start_time=start_time,
-                            start_pos=start_pos, start_vel=start_vel, max_accel=max_accel)
+            self.check_path(path, tai=tai,
+                            pos=pos, vel=vel, max_accel=max_accel)
 
     def test_already_stopped(self):
         """Test stop when already stopped."""
         # Arbitrary but reasonable values
-        start_time = 1550000000
+        tai = 1550000000
         max_accel = 2
 
-        for start_pos in (-5, 0, 30):
-            path = simactuators.path.stop(start_time=start_time, start_pos=start_pos,
-                                          start_vel=0, max_accel=max_accel)
+        for pos in (-5, 0, 30):
+            path = simactuators.path.stop(tai=tai, pos=pos,
+                                          vel=0, max_accel=max_accel)
             self.assertEqual(len(path), 1)
             self.assertEqual(path.kind, simactuators.path.Kind.Stopped)
-            self.check_path(path, start_time=start_time,
-                            start_pos=start_pos, start_vel=0,
+            self.check_path(path, tai=tai,
+                            pos=pos, vel=0,
                             max_accel=max_accel)
 
     def test_invalid_inputs(self):
         # Arbitrary but reasonable values
-        start_time = 1530000000
-        start_pos = 1
-        start_vel = -2
+        tai = 1530000000
+        pos = 1
+        vel = -2
 
         # max_accel must be >= 0
         with self.assertRaises(ValueError):
-            simactuators.path.stop(start_time=start_time, start_pos=start_pos,
-                                   start_vel=start_vel, max_accel=0)
+            simactuators.path.stop(tai=tai, pos=pos,
+                                   vel=vel, max_accel=0)
         with self.assertRaises(ValueError):
-            simactuators.path.stop(start_time=start_time, start_pos=start_pos,
-                                   start_vel=start_vel, max_accel=-1)
+            simactuators.path.stop(tai=tai, pos=pos,
+                                   vel=vel, max_accel=-1)
 
 
 if __name__ == '__main__':

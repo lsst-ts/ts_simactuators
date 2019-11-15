@@ -40,8 +40,7 @@ class Path:
     Parameters
     ----------
     segments : ``iterable`` of `PathSegment`
-        Segments in the path. For the `pva` method to work correctly,
-        times must be in increasing order.
+        Segments in the path. Times must be in increasing order.
     kind : `Kind`
         Kind of path
 
@@ -49,40 +48,39 @@ class Path:
     ------
     ValueError
         If no segments are supplied
-        or the segments do not have increasing start_times.
+        or the segments do not have increasing ``tai``.
     """
     def __init__(self, *segments, kind):
         if len(segments) < 1:
             raise ValueError(f"segments={segments} needs at least one element")
-        prev_t_start = None
+        prev_tai = None
         for segment in segments:
-            if prev_t_start is not None:
-                if segment.start_time <= prev_t_start:
+            if prev_tai is not None:
+                if segment.tai <= prev_tai:
                     raise ValueError(f"segment start times not in increasing order")
-                prev_t_start = segment.start_time
+                prev_tai = segment.tai
 
         self.segments = segments
         self.kind = Kind(kind)
-        self.ts = [segment.start_time for segment in segments]
+        self.tais = [segment.tai for segment in segments]
 
-    def pva(self, t):
-        """Compute position, velocity and acceleration at a given time.
+    def at(self, tai):
+        """Compute a path segment at the specified time.
 
         Parameters
         ----------
-        t : `float`
-            Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+        tai : `float`
+            TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
 
         Returns
         -------
-        pva : `PosVelAccel`
-            Position, velocity and acceleration at the specified time,
-            extrapolated if necessary.
+        segment : `PathSegment`
+            Path segement at the specified time, extrapolated if necessary.
         """
-        ind = bisect.bisect(self.ts, t)
+        ind = bisect.bisect(self.tais, tai)
         if ind > 0:
             ind -= 1
-        return self.segments[ind].pva(t)
+        return self.segments[ind].at(tai)
 
     def __len__(self):
         return len(self.segments)

@@ -22,25 +22,7 @@
 import math
 import sys
 
-__all__ = ["PosVelAccel", "MotionLimits", "PathSegment"]
-
-
-class PosVelAccel:
-    """Position, velocity and acceleration.
-
-    Parameters
-    ----------
-    pos : `float` (optional)
-        Position (deg)
-    vel : `float` (optional)
-        Velocity (deg/sec)
-    accel : `float` (optional)
-        Acceleration (deg/sec^2)
-    """
-    def __init__(self, pos=0, vel=0, accel=0):
-        self.pos = pos
-        self.vel = vel
-        self.accel = accel
+__all__ = ["MotionLimits", "PathSegment"]
 
 
 class MotionLimits:
@@ -65,54 +47,54 @@ class MotionLimits:
 
 
 class PathSegment:
-    """A segment of a path, motion with constant jerk.
+    """A segment of a `Path`, a path of constant jerk.
 
     Parameters
     ----------
-    start_time : `float`
-        Initial time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
-    start_pos : `float` (optional)
-        Initial position (deg)
-    start_vel : `float` (optional)
-        Initial velocity (deg/sec)
-    start_accel : `float` (optional)
-        Initial acceleration (deg/sec^2)
+    tai : `float`
+        TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+    pos : `float` at time ``tai`` (optional)
+        Position (deg)
+    vel : `float` at time ``tai`` (optional)
+        Velocity at time ``tai`` (deg/sec)
+    accel : `float` (optional)
+        Acceleration at time ``tai`` (deg/sec^2)
     jerk : `float` (optional)
         Jerk (deg/sec^3)
     """
-    def __init__(self, start_time, start_pos=0, start_vel=0, start_accel=0, jerk=0):
-        self.start_time = float(start_time)
-        self.start_pos = float(start_pos)
-        self.start_vel = float(start_vel)
-        self.start_accel = float(start_accel)
+    def __init__(self, tai, pos=0, vel=0, accel=0, jerk=0):
+        self.tai = float(tai)
+        self.pos = float(pos)
+        self.vel = float(vel)
+        self.accel = float(accel)
         self.jerk = float(jerk)
 
     @classmethod
-    def from_end_conditions(cls, start_time, start_pos, start_vel, end_time, end_pos, end_vel):
+    def from_end_conditions(cls, start_tai, start_pos, start_vel, end_tai, end_pos, end_vel):
         """Create a path segment from end conditions.
 
         Parameters
         ----------
-        start_time : `float`
+        start_tai : `float`
             Initial time (TAI unix seconds, e.g. from
             lsst.ts.salobj.curr_tai()).
         start_pos : `float` (optional)
-            Initial position (deg)
+            Position at ``start_tai`` (deg)
         start_vel : `float` (optional)
-            Initial velocity (deg/sec)
-        end_time : `float`
+            Velocity at ``start_tai`` (deg/sec)
+        end_tai : `float`
             Final time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
         end_pos : `float` (optional)
-            Final position (deg)
+            Position at ``end_tai`` (deg)
         end_vel : `float` (optional)
-            Final velocity (deg/sec)
+            Velocity  at ``end_tai`` (deg/sec)
 
         Raises
         ------
         ValueError
-            If end_time - start_time <= 0.
+            If end_tai - start_tai <= 0.
         """
-        dt = end_time - start_time
+        dt = end_tai - start_tai
         # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
             raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
@@ -121,18 +103,18 @@ class PathSegment:
         start_accel = (3*mean_vel - (2*start_vel + end_vel))*2/dt
         jerk = (((start_vel + end_vel)/2) - mean_vel)*12/(dt*dt)
 
-        return cls(start_time=start_time,
-                   start_pos=start_pos,
-                   start_vel=start_vel,
-                   start_accel=start_accel,
+        return cls(tai=start_tai,
+                   pos=start_pos,
+                   vel=start_vel,
+                   accel=start_accel,
                    jerk=jerk)
 
-    def limits(self, end_time):
+    def limits(self, end_tai):
         """Compute limits of motion given an end time.
 
         Parameters
         ----------
-        end_time : `float`
+        end_tai : `float`
             End time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
 
         Returns
@@ -143,10 +125,10 @@ class PathSegment:
         Raises
         ------
         ValueError
-            If ``end_time - self.start_time <= math.sqrt(sys.float_info.min)``
+            If ``end_tai - self.tai <= math.sqrt(sys.float_info.min)``
             (to avoid overflow).
         """
-        dt = end_time - self.start_time
+        dt = end_tai - self.tai
         # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
             raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
@@ -155,15 +137,15 @@ class PathSegment:
         # at the endpoints or at time t_vex = -start_accel/jerk.
         # Compute t_vex and vex = v(t_vex); if t_vex is not in range [0, dt),
         # set t_vex = 0, so that vex = start_vel
-        end_pva = self.pva(end_time)
+        end_pva = self.at(end_tai)
 
-        if abs(self.start_accel) < abs(self.jerk * dt):
-            t_vex = max(-self.start_accel/self.jerk, 0.0)
+        if abs(self.accel) < abs(self.jerk * dt):
+            t_vex = max(-self.accel/self.jerk, 0.0)
         else:
             t_vex = 0.0
-        vex = self.start_vel + t_vex*(self.start_accel + (t_vex/2)*self.jerk)
-        max_vel = max(abs(self.start_vel), abs(end_pva.vel), abs(vex))
-        max_accel = max(abs(self.start_accel), abs(end_pva.accel))
+        vex = self.vel + t_vex*(self.accel + (t_vex/2)*self.jerk)
+        max_vel = max(abs(self.vel), abs(end_pva.vel), abs(vex))
+        max_accel = max(abs(self.accel), abs(end_pva.accel))
 
         t_pexArr = [0]*2
         numArr = [0]*2
@@ -172,19 +154,19 @@ class PathSegment:
         # Compute the two times t_pexArr,
         # and positions pexArr = p(t_pexArr).
         # If a t_pexArr is out of range [0, dt), set it to 0
-        # (so its pexArr = self.start_pos).
-        if abs(self.start_vel) < abs(self.start_accel * dt):
-            t_pex_zeroj = max(-self.start_vel / self.start_accel, 0.0)
+        # (so its pexArr = self.pos).
+        if abs(self.vel) < abs(self.accel * dt):
+            t_pex_zeroj = max(-self.vel / self.accel, 0.0)
         else:
             t_pex_zeroj = 0.0
-        sqrt_arg = (self.start_accel * self.start_accel) - (2.0 * self.start_vel * self.jerk)
+        sqrt_arg = (self.accel * self.accel) - (2.0 * self.vel * self.jerk)
         if sqrt_arg < 0.0:
             t_pexArr[0] = 0.0
             t_pexArr[1] = 0.0
         else:
             sqrt_val = math.sqrt(sqrt_arg)
-            numArr[0] = -self.start_accel - sqrt_val
-            numArr[1] = -self.start_accel + sqrt_val
+            numArr[0] = -self.accel - sqrt_val
+            numArr[1] = -self.accel + sqrt_val
             for branch in range(2):
                 if abs(numArr[branch]) < abs(self.jerk * dt):
                     t_pexArr[branch] = max(0.0, numArr[branch] / self.jerk)
@@ -192,40 +174,42 @@ class PathSegment:
                     t_pexArr[branch] = t_pex_zeroj
         for branch in range(2):
             t_branch = t_pexArr[branch]
-            vel_branch = self.start_vel + (t_branch/2)*(self.start_accel + (t_branch/3)*self.jerk)
-            pexArr[branch] = self.start_pos + t_branch*vel_branch
+            vel_branch = self.vel + (t_branch/2)*(self.accel + (t_branch/3)*self.jerk)
+            pexArr[branch] = self.pos + t_branch*vel_branch
 
-        min_pos = min(self.start_pos, end_pva.pos, pexArr[0], pexArr[1])
-        max_pos = max(self.start_pos, end_pva.pos, pexArr[0], pexArr[1])
+        min_pos = min(self.pos, end_pva.pos, pexArr[0], pexArr[1])
+        max_pos = max(self.pos, end_pva.pos, pexArr[0], pexArr[1])
 
         return MotionLimits(min_pos=min_pos,
                             max_pos=max_pos,
                             max_vel=max_vel,
                             max_accel=max_accel)
 
-    def pva(self, t):
-        """Compute position, velocity and acceleration at a given time.
+    def at(self, tai):
+        """Return a copy with the specified time.
 
         Parameters
         ----------
-        t : `float`
+        tai : `float`
             Time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
 
         Returns
         -------
-        pva : `PosVelAccel`
-            Position, velocity and acceleration at the specified time.
+        copy : `PathSegment`
+            Copy at the specified time.
         """
-        dt = t - self.start_time
-        return PosVelAccel(
-            pos=self.start_pos + dt*(self.start_vel + dt*(0.5*self.start_accel + dt*self.jerk/6.0)),
-            vel=self.start_vel + dt*(self.start_accel + dt*(0.5*self.jerk)),
-            accel=self.start_accel + dt*self.jerk,
+        dt = tai - self.tai
+        return PathSegment(
+            tai=tai,
+            pos=self.pos + dt*(self.vel + dt*(0.5*self.accel + dt*self.jerk/6.0)),
+            vel=self.vel + dt*(self.accel + dt*(0.5*self.jerk)),
+            accel=self.accel + dt*self.jerk,
+            jerk=self.jerk,
         )
 
     def __repr__(self):
-        fields = [f"start_time={self.start_time}"]
-        for name in ("start_pos", "start_vel", "start_accel", "jerk"):
+        fields = [f"tai={self.tai}"]
+        for name in ("pos", "vel", "accel", "jerk"):
             val = getattr(self, name)
             if val != 0:
                 fields.append(f"{name}={val}")

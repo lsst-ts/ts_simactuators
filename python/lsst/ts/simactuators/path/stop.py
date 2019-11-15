@@ -27,17 +27,17 @@ from . import path_segment
 from . import path
 
 
-def stop(start_time, start_pos, start_vel, max_accel):
+def stop(tai, pos, vel, max_accel):
     """Compute a path to stop as quickly as possible.
 
     Parameters
     ----------
-    start_time : `float`
-        Start time of path.
-    start_pos : `float`
-        Starting position (deg)
-    start_vel : `float`
-        Starting velocity (deg/sec)
+    tai : `float`
+        TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+    pos : `float`
+        Position at time ``tai`` (deg)
+    vel : `float`
+        Velocity at time ``tai`` (deg/sec)
     max_accel : `float`
         Maximum allowed acceleration (deg/sec^2)
 
@@ -55,23 +55,23 @@ def stop(start_time, start_pos, start_vel, max_accel):
     if max_accel <= 0.0:
         raise ValueError(f"max_accel={max_accel} < 0")
 
-    if start_vel == 0:
-        return path.Path(path_segment.PathSegment(start_time=start_time, start_pos=start_pos),
+    if vel == 0:
+        return path.Path(path_segment.PathSegment(tai=tai, pos=pos),
                          kind=path.Kind.Stopped)
 
     segments = []
-    # start_time is large enough that small time changes
+    # tai is large enough that small time changes
     # have poor accuracy, so to improve accuracy
-    # compute the path segments using start_time = 0
+    # compute the path segments using tai = 0
     # then offset all the times before returning the path
-    dt = abs(start_vel)/max_accel
-    accel = -math.copysign(max_accel, start_vel)
-    p1 = start_pos + dt*(start_vel + dt*0.5*accel)
-    segments.append(path_segment.PathSegment(start_time=0, start_pos=start_pos,
-                                             start_vel=start_vel, start_accel=accel))
-    segments.append(path_segment.PathSegment(start_time=dt, start_pos=p1, start_vel=0))
+    dt = abs(vel)/max_accel
+    accel = -math.copysign(max_accel, vel)
+    p1 = pos + dt*(vel + dt*0.5*accel)
+    segments.append(path_segment.PathSegment(tai=0, pos=pos,
+                                             vel=vel, accel=accel))
+    segments.append(path_segment.PathSegment(tai=dt, pos=p1, vel=0))
 
     for tpvaj in segments:
-        tpvaj.start_time += start_time
+        tpvaj.tai += tai
 
     return path.Path(*segments, kind=path.Kind.Stopping)
