@@ -27,7 +27,7 @@ from . import path_segment
 from . import path
 
 
-def stop(tai, pos, vel, max_accel):
+def stop(tai, pos, vel, max_acceleration):
     """Compute a path to stop as quickly as possible.
 
     Parameters
@@ -38,7 +38,7 @@ def stop(tai, pos, vel, max_accel):
         Position at time ``tai`` (deg)
     vel : `float`
         Velocity at time ``tai`` (deg/sec)
-    max_accel : `float`
+    max_acceleration : `float`
         Maximum allowed acceleration (deg/sec^2)
 
     Returns
@@ -50,10 +50,10 @@ def stop(tai, pos, vel, max_accel):
     Raises
     ------
     ValueError
-        If |max_accel| <= 0
+        If |max_acceleration| <= 0
     """
-    if max_accel <= 0.0:
-        raise ValueError(f"max_accel={max_accel} < 0")
+    if max_acceleration <= 0.0:
+        raise ValueError(f"max_acceleration={max_acceleration} < 0")
 
     if vel == 0:
         return path.Path(path_segment.PathSegment(tai=tai, pos=pos),
@@ -64,8 +64,8 @@ def stop(tai, pos, vel, max_accel):
     # have poor accuracy, so to improve accuracy
     # compute the path segments using tai = 0
     # then offset all the times before returning the path
-    dt = abs(vel)/max_accel
-    accel = -math.copysign(max_accel, vel)
+    dt = abs(vel)/max_acceleration
+    accel = -math.copysign(max_acceleration, vel)
     p1 = pos + dt*(vel + dt*0.5*accel)
     segments.append(path_segment.PathSegment(tai=0, pos=pos,
                                              vel=vel, accel=accel))

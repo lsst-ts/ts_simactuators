@@ -30,20 +30,20 @@ class MotionLimits:
 
     Parameters
     ----------
-    min_pos : `float`
+    min_position : `float`
         Minimum position (deg)
-    max_pos : `float`
+    max_position : `float`
         Maximum position (deg)
-    max_vel : `float`
+    max_velocity : `float`
         Maximum absolute value of velocity (deg/sec)
-    max_accel : `float`
+    max_acceleration : `float`
         Maximum absolute value of acceleration (deg/sec/sec)
     """
-    def __init__(self, min_pos, max_pos, max_vel, max_accel):
-        self.min_pos = min_pos
-        self.max_pos = max_pos
-        self.max_vel = max_vel
-        self.max_accel = max_accel
+    def __init__(self, min_position, max_position, max_velocity, max_acceleration):
+        self.min_position = min_position
+        self.max_position = max_position
+        self.max_velocity = max_velocity
+        self.max_acceleration = max_acceleration
 
 
 class PathSegment:
@@ -70,7 +70,8 @@ class PathSegment:
         self.jerk = float(jerk)
 
     @classmethod
-    def from_end_conditions(cls, start_tai, start_pos, start_vel, end_tai, end_pos, end_vel):
+    def from_end_conditions(cls, start_tai, start_position, start_velocity,
+                            end_tai, end_position, end_velocity):
         """Create a path segment from end conditions.
 
         Parameters
@@ -78,15 +79,15 @@ class PathSegment:
         start_tai : `float`
             Initial time (TAI unix seconds, e.g. from
             lsst.ts.salobj.curr_tai()).
-        start_pos : `float` (optional)
+        start_position : `float` (optional)
             Position at ``start_tai`` (deg)
-        start_vel : `float` (optional)
+        start_velocity : `float` (optional)
             Velocity at ``start_tai`` (deg/sec)
         end_tai : `float`
             Final time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
-        end_pos : `float` (optional)
+        end_position : `float` (optional)
             Position at ``end_tai`` (deg)
-        end_vel : `float` (optional)
+        end_velocity : `float` (optional)
             Velocity  at ``end_tai`` (deg/sec)
 
         Raises
@@ -99,13 +100,13 @@ class PathSegment:
         if dt <= math.sqrt(sys.float_info.min):
             raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
 
-        mean_vel = (end_pos - start_pos) / dt
-        start_accel = (3*mean_vel - (2*start_vel + end_vel))*2/dt
-        jerk = (((start_vel + end_vel)/2) - mean_vel)*12/(dt*dt)
+        mean_vel = (end_position - start_position) / dt
+        start_accel = (3*mean_vel - (2*start_velocity + end_velocity))*2/dt
+        jerk = (((start_velocity + end_velocity)/2) - mean_vel)*12/(dt*dt)
 
         return cls(tai=start_tai,
-                   pos=start_pos,
-                   vel=start_vel,
+                   pos=start_position,
+                   vel=start_velocity,
                    accel=start_accel,
                    jerk=jerk)
 
@@ -133,10 +134,10 @@ class PathSegment:
         if dt <= math.sqrt(sys.float_info.min):
             raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
 
-        # Compute maximum |velocity| (max_vel); this may occur
+        # Compute maximum |velocity| (max_velocity); this may occur
         # at the endpoints or at time t_vex = -start_accel/jerk.
         # Compute t_vex and vex = v(t_vex); if t_vex is not in range [0, dt),
-        # set t_vex = 0, so that vex = start_vel
+        # set t_vex = 0, so that vex = start_velocity
         end_pva = self.at(end_tai)
 
         if abs(self.accel) < abs(self.jerk * dt):
@@ -144,8 +145,8 @@ class PathSegment:
         else:
             t_vex = 0.0
         vex = self.vel + t_vex*(self.accel + (t_vex/2)*self.jerk)
-        max_vel = max(abs(self.vel), abs(end_pva.vel), abs(vex))
-        max_accel = max(abs(self.accel), abs(end_pva.accel))
+        max_velocity = max(abs(self.vel), abs(end_pva.vel), abs(vex))
+        max_acceleration = max(abs(self.accel), abs(end_pva.accel))
 
         t_pexArr = [0]*2
         numArr = [0]*2
@@ -177,13 +178,13 @@ class PathSegment:
             vel_branch = self.vel + (t_branch/2)*(self.accel + (t_branch/3)*self.jerk)
             pexArr[branch] = self.pos + t_branch*vel_branch
 
-        min_pos = min(self.pos, end_pva.pos, pexArr[0], pexArr[1])
-        max_pos = max(self.pos, end_pva.pos, pexArr[0], pexArr[1])
+        min_position = min(self.pos, end_pva.pos, pexArr[0], pexArr[1])
+        max_position = max(self.pos, end_pva.pos, pexArr[0], pexArr[1])
 
-        return MotionLimits(min_pos=min_pos,
-                            max_pos=max_pos,
-                            max_vel=max_vel,
-                            max_accel=max_accel)
+        return MotionLimits(min_position=min_position,
+                            max_position=max_position,
+                            max_velocity=max_velocity,
+                            max_acceleration=max_acceleration)
 
     def at(self, tai):
         """Return a copy with the specified time.

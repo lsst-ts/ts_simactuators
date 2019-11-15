@@ -32,9 +32,9 @@ class PointToPointActuator:
 
     Parameters
     ----------
-    min_pos : `float`
+    min_position : `float`
         Minimum allowed position.
-    max_pos : `float`
+    max_position : `float`
         Maximum allowed position.
     pos : `float`
         Initial position.
@@ -45,37 +45,37 @@ class PointToPointActuator:
     ------
     ValueError
         If ``speed <= 0``,
-        ``min_pos >= max_pos``,
-        or ``pos`` not in range ``[min_pos, max_pos]``.
+        ``min_position >= max_position``,
+        or ``pos`` not in range ``[min_position, max_position]``.
     """
-    def __init__(self, min_pos, max_pos, pos, speed):
+    def __init__(self, min_position, max_position, pos, speed):
         if speed <= 0:
             raise ValueError(f"speed={speed} must be positive")
-        if min_pos >= max_pos:
-            raise ValueError(f"min_pos={min_pos} must be < max_pos={max_pos}")
-        if not min_pos <= pos <= max_pos:
+        if min_position >= max_position:
+            raise ValueError(f"min_position={min_position} must be < max_position={max_position}")
+        if not min_position <= pos <= max_position:
             raise ValueError(f"pos={pos} must be in range "
-                             f"[{min_pos}, {max_pos}]")
+                             f"[{min_position}, {max_position}]")
 
-        self.min_pos = min_pos
-        self.max_pos = max_pos
+        self.min_position = min_position
+        self.max_position = max_position
         self.speed = speed
-        self._start_pos = pos
-        self._end_pos = pos
+        self._start_position = pos
+        self._end_position = pos
         # End time of move, or 0 if not moving.
         self._end_time = 0
 
     @property
-    def start_pos(self):
+    def start_position(self):
         """Starting position of move.
         """
-        return self._start_pos
+        return self._start_position
 
     @property
-    def end_pos(self):
+    def end_position(self):
         """Ending position of move.
         """
-        return self._end_pos
+        return self._end_position
 
     def set_pos(self, pos):
         """Set a new desired position.
@@ -83,30 +83,30 @@ class PointToPointActuator:
         Raises
         ------
         ValueError
-            If pos < self.min_pos or > self.max_pos.
+            If pos < self.min_position or > self.max_position.
         """
-        if pos < self.min_pos or pos > self.max_pos:
-            raise ValueError(f"pos={pos} not in range [{self.min_pos}, {self.max_pos}]")
-        self._start_pos = self.curr_pos
-        self._end_pos = pos
-        dtime = abs(self.end_pos - self.start_pos) / self.speed
+        if pos < self.min_position or pos > self.max_position:
+            raise ValueError(f"pos={pos} not in range [{self.min_position}, {self.max_position}]")
+        self._start_position = self.current_position
+        self._end_position = pos
+        dtime = abs(self.end_position - self.start_position) / self.speed
         self._end_time = time.monotonic() + dtime
 
     @property
-    def curr_pos(self):
+    def current_position(self):
         """Current position.
         """
         rem_time = self.remaining_time
         if rem_time == 0:
-            return self.end_pos
+            return self.end_position
         else:
-            return self.end_pos - self.direction*self.speed*rem_time
+            return self.end_position - self.direction*self.speed*rem_time
 
     @property
     def direction(self):
         """1 if moving or moved to greater position, -1 otherwise.
         """
-        return 1 if self.end_pos >= self.start_pos else -1
+        return 1 if self.end_position >= self.start_position else -1
 
     @property
     def moving(self):
@@ -117,9 +117,9 @@ class PointToPointActuator:
     def stop(self):
         """Stop motion instantly.
 
-        Set end_pos to the current position.
+        Set end_position to the current position.
         """
-        self._end_pos = self.curr_pos
+        self._end_position = self.current_position
         self._end_time = 0
 
     @property

@@ -30,55 +30,61 @@ from lsst.ts import simactuators
 
 
 class TestPathSegment(unittest.TestCase):
-    def check_from_end_conditions(self, start_pos, start_vel, end_pos, end_vel, dt):
+    def check_from_end_conditions(self, start_position, start_velocity, end_position, end_velocity, dt):
         """Check PathSegment from_end_conditions and limits methods.
         """
         start_tai = 45.3  # any value will do
         end_tai = start_tai + dt
         segment = simactuators.path.PathSegment.from_end_conditions(
-            start_tai=start_tai, start_pos=start_pos, start_vel=start_vel,
-            end_tai=end_tai, end_pos=end_pos, end_vel=end_vel)
+            start_tai=start_tai, start_position=start_position, start_velocity=start_velocity,
+            end_tai=end_tai, end_position=end_position, end_velocity=end_velocity)
         self.assertAlmostEqual(segment.tai, start_tai)
-        self.assertAlmostEqual(segment.pos, start_pos)
-        self.assertAlmostEqual(segment.vel, start_vel)
+        self.assertAlmostEqual(segment.pos, start_position)
+        self.assertAlmostEqual(segment.vel, start_velocity)
 
         pva_end = segment.at(end_tai)
-        self.assertAlmostEqual(pva_end.pos, end_pos)
-        self.assertAlmostEqual(pva_end.vel, end_vel)
+        self.assertAlmostEqual(pva_end.pos, end_position)
+        self.assertAlmostEqual(pva_end.vel, end_velocity)
         start_accel = segment.accel
         jerk = segment.jerk
-        desired_end_pos = start_pos + dt*(start_vel + dt*(0.5*start_accel + dt*(1/6)*jerk))
-        desired_end_vel = start_vel + dt*(start_accel + dt*0.5*jerk)
-        self.assertAlmostEqual(pva_end.pos, desired_end_pos)
-        self.assertAlmostEqual(pva_end.vel, desired_end_vel)
+        desired_end_position = start_position + dt*(start_velocity + dt*(0.5*start_accel + dt*(1/6)*jerk))
+        desired_end_velocity = start_velocity + dt*(start_accel + dt*0.5*jerk)
+        self.assertAlmostEqual(pva_end.pos, desired_end_position)
+        self.assertAlmostEqual(pva_end.vel, desired_end_velocity)
 
         # estimate position and velocity limits by computing at many points
-        desired_min_pos = min(start_pos, end_pos)
-        desired_max_pos = max(start_pos, end_pos)
-        desired_max_vel = max(abs(start_vel), abs(end_vel))
+        desired_min_position = min(start_position, end_position)
+        desired_max_position = max(start_position, end_position)
+        desired_max_velocity = max(abs(start_velocity), abs(end_velocity))
         for t in np.linspace(start=0, stop=dt, num=100):
-            pt = start_pos + t*(start_vel + t*(0.5*start_accel + t*jerk/6))
-            vt = start_vel + t*(start_accel + t*0.5*jerk)
-            desired_min_pos = min(pt, desired_min_pos)
-            desired_max_pos = max(pt, desired_max_pos)
-            desired_max_vel = max(abs(vt), desired_max_vel)
+            pt = start_position + t*(start_velocity + t*(0.5*start_accel + t*jerk/6))
+            vt = start_velocity + t*(start_accel + t*0.5*jerk)
+            desired_min_position = min(pt, desired_min_position)
+            desired_max_position = max(pt, desired_max_position)
+            desired_max_velocity = max(abs(vt), desired_max_velocity)
         aB = start_accel + dt*jerk
-        desired_max_accel = max(abs(start_accel), abs(aB))
+        desired_max_acceleration = max(abs(start_accel), abs(aB))
 
         limits = segment.limits(end_tai)
-        self.assertAlmostEqual(limits.min_pos, desired_min_pos, places=3)
-        self.assertAlmostEqual(limits.max_pos, desired_max_pos, places=3)
-        self.assertAlmostEqual(limits.max_vel, desired_max_vel, places=3)
-        self.assertAlmostEqual(limits.max_accel, desired_max_accel)
+        self.assertAlmostEqual(limits.min_position, desired_min_position, places=3)
+        self.assertAlmostEqual(limits.max_position, desired_max_position, places=3)
+        self.assertAlmostEqual(limits.max_velocity, desired_max_velocity, places=3)
+        self.assertAlmostEqual(limits.max_acceleration, desired_max_acceleration)
 
     def test_from_end_conditions(self):
-        for start_pos, start_vel, end_pos, end_vel, dt in itertools.product(
+        for start_position, start_velocity, end_position, end_velocity, dt in itertools.product(
             (0, -0.5, 0.2), (0, -0.2, 0.1), (0, 0.3, -0.6), (0, 0.3, -0.2), (1, 5),
         ):
-            with self.subTest(start_pos=start_pos, start_vel=start_vel,
-                              end_pos=end_pos, end_vel=end_vel, dt=dt):
-                self.check_from_end_conditions(dt=dt, start_pos=start_pos, start_vel=start_vel,
-                                               end_pos=end_pos, end_vel=end_vel)
+            with self.subTest(start_position=start_position,
+                              start_velocity=start_velocity,
+                              end_position=end_position,
+                              end_velocity=end_velocity,
+                              dt=dt):
+                self.check_from_end_conditions(dt=dt,
+                                               start_position=start_position,
+                                               start_velocity=start_velocity,
+                                               end_position=end_position,
+                                               end_velocity=end_velocity)
 
     def test_basics(self):
         tai = 1573847242.4
@@ -146,13 +152,14 @@ class TestPathSegment(unittest.TestCase):
         The only thing that can go wrong is end_tai - start_tai <= 0.
         """
         for dt in (0, math.sqrt(sys.float_info.min)):
-            start_tai = 51.0  # arbitrary
-            end_tai = start_tai + dt
+            with self.subTest(dt=dt):
+                start_tai = 51.0  # arbitrary
+                end_tai = start_tai + dt
 
-            with self.assertRaises(ValueError):
-                simactuators.path.PathSegment.from_end_conditions(
-                    start_tai, start_pos=1, start_vel=2,
-                    end_tai=end_tai, end_pos=1, end_vel=2)
+                with self.assertRaises(ValueError):
+                    simactuators.path.PathSegment.from_end_conditions(
+                        start_tai, start_position=1, start_velocity=2,
+                        end_tai=end_tai, end_position=1, end_velocity=2)
 
 
 if __name__ == '__main__':

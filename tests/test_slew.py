@@ -27,7 +27,8 @@ from lsst.ts import simactuators
 
 
 class TestSlew(unittest.TestCase):
-    def check_path(self, path, tai, start_pos, start_vel, end_pos, end_vel, max_vel, max_accel):
+    def check_path(self, path, tai, start_position, start_velocity,
+                   end_position, end_velocity, max_velocity, max_acceleration):
         """Check various aspects of a path created by `slew`.
 
         Parameters
@@ -36,19 +37,19 @@ class TestSlew(unittest.TestCase):
             Path to check
         tai : `float`
             Start time of slew
-        start_pos : `float`
+        start_position : `float`
             Initial position of path (deg)
-        start_pos : `float`
+        start_position : `float`
             Position of A at time tai (deg)
-        start_vel : `float`
+        start_velocity : `float`
             Velocity of A at time tai (deg/sec)
-        end_pos : `float`
+        end_position : `float`
             Position of B at time tai (deg)
-        end_vel : `float`
+        end_velocity : `float`
             Velocity of B at time tai (deg/sec)
-        max_vel : `float`
+        max_velocity : `float`
             Maximum allowed velocity (deg/sec)
-        max_accel : `float`
+        max_acceleration : `float`
             Maximum allowed acceleration (deg/sec^2)
 
         Notes
@@ -63,8 +64,8 @@ class TestSlew(unittest.TestCase):
         - The final position and velocity are correct.
         """
         self.assertAlmostEqual(path[0].tai, tai)
-        self.assertAlmostEqual(path[0].pos, start_pos)
-        self.assertAlmostEqual(path[0].vel, start_vel)
+        self.assertAlmostEqual(path[0].pos, start_position)
+        self.assertAlmostEqual(path[0].vel, start_velocity)
 
         for i in range(len(path) - 1):
             segment0 = path[i]
@@ -77,133 +78,133 @@ class TestSlew(unittest.TestCase):
             self.assertAlmostEqual(segment1.vel, pred_v1, places=4)
 
         for tpvaj in path:
-            self.assertLessEqual(abs(tpvaj.vel), max_vel)
-            self.assertLessEqual(abs(tpvaj.accel), max_accel)
+            self.assertLessEqual(abs(tpvaj.vel), max_velocity)
+            self.assertLessEqual(abs(tpvaj.accel), max_acceleration)
 
     def test_no_slew(self):
         """Test moving from a point to itself (no slew needed)."""
         # Arbitrary but reasonable values
         tai = 1550000000
-        max_vel = 3
-        max_accel = 2
+        max_velocity = 3
+        max_acceleration = 2
 
-        for start_pos in (-5, 0, 30):
-            for start_vel in (0, 1):
+        for start_position in (-5, 0, 30):
+            for start_velocity in (0, 1):
                 path = simactuators.path.slew(tai=tai,
-                                              start_pos=start_pos, start_vel=start_vel,
-                                              end_pos=start_pos, end_vel=start_vel,
-                                              max_vel=max_vel, max_accel=max_accel)
+                                              start_position=start_position, start_velocity=start_velocity,
+                                              end_position=start_position, end_velocity=start_velocity,
+                                              max_velocity=max_velocity, max_acceleration=max_acceleration)
                 self.assertEqual(path.kind, simactuators.path.Kind.Slewing)
                 self.check_path(path, tai=tai,
-                                start_pos=start_pos, start_vel=start_vel,
-                                end_pos=start_pos, end_vel=start_vel,
-                                max_vel=max_vel, max_accel=max_accel)
+                                start_position=start_position, start_velocity=start_velocity,
+                                end_position=start_position, end_velocity=start_velocity,
+                                max_velocity=max_velocity, max_acceleration=max_acceleration)
                 self.assertEqual(len(path), 1)
                 self.assertAlmostEqual(path[0].accel, 0)
 
     def test_long_fixed_points(self):
         """Test a fixed point to fixed point slew that is long enough
-        to have a segment with constant velocity=+/-max_vel
+        to have a segment with constant velocity=+/-max_velocity
 
         This case is trivial to guess the required answer.
         """
         # Arbitrary but reasonable values
         tai = 1540000000
-        max_vel = 3.5
-        max_accel = 2.1
+        max_velocity = 3.5
+        max_acceleration = 2.1
 
         # compute expected delta time and distance covered
         # going from 0 velocity to full velocity at full acceleration
-        dt_max_vel = max_vel/max_accel
-        dp_max_vel = 0.5*max_accel*dt_max_vel**2
+        dt_max_velocity = max_velocity/max_acceleration
+        dp_max_velocity = 0.5*max_acceleration*dt_max_velocity**2
 
-        for start_pos in (-5, 0):
-            for dpos in (-2.001*dp_max_vel, 10*dp_max_vel):
+        for start_position in (-5, 0):
+            for dpos in (-2.001*dp_max_velocity, 10*dp_max_velocity):
                 # time enough to ramp up to full speed
                 # and stay there for at least a short time
-                end_pos = start_pos + dpos
-                path = simactuators.path.slew(tai=tai, start_pos=start_pos, start_vel=0,
-                                              end_pos=end_pos, end_vel=0,
-                                              max_vel=max_vel, max_accel=max_accel)
+                end_position = start_position + dpos
+                path = simactuators.path.slew(tai=tai, start_position=start_position, start_velocity=0,
+                                              end_position=end_position, end_velocity=0,
+                                              max_velocity=max_velocity, max_acceleration=max_acceleration)
                 self.check_path(path, tai=tai,
-                                start_pos=start_pos, start_vel=0,
-                                end_pos=end_pos, end_vel=0,
-                                max_vel=max_vel, max_accel=max_accel)
+                                start_position=start_position, start_velocity=0,
+                                end_position=end_position, end_velocity=0,
+                                max_velocity=max_velocity, max_acceleration=max_acceleration)
                 self.assertEqual(path.kind, simactuators.path.Kind.Slewing)
                 self.assertEqual(len(path), 4)
 
                 self.assertEqual(len(path), 4)
                 self.assertAlmostEqual(path[0].tai, tai)
-                self.assertAlmostEqual(path[0].pos, start_pos)
+                self.assertAlmostEqual(path[0].pos, start_position)
                 self.assertAlmostEqual(path[0].vel, 0)
-                self.assertAlmostEqual(path[0].accel, math.copysign(max_accel, dpos))
+                self.assertAlmostEqual(path[0].accel, math.copysign(max_acceleration, dpos))
 
-                predicted_dt1 = dt_max_vel
+                predicted_dt1 = dt_max_velocity
                 predicted_t1 = tai + predicted_dt1
-                predicted_dp1 = math.copysign(dp_max_vel, dpos)
-                predicted_p1 = start_pos + predicted_dp1
+                predicted_dp1 = math.copysign(dp_max_velocity, dpos)
+                predicted_p1 = start_position + predicted_dp1
                 self.assertAlmostEqual(path[1].tai, predicted_t1, places=4)
                 self.assertAlmostEqual(path[1].pos, predicted_p1)
-                self.assertAlmostEqual(abs(path[1].vel), max_vel)
+                self.assertAlmostEqual(abs(path[1].vel), max_velocity)
                 self.assertAlmostEqual(path[1].accel, 0)
 
-                predicted_abs_dp2 = abs(dpos) - 2*dp_max_vel
+                predicted_abs_dp2 = abs(dpos) - 2*dp_max_velocity
                 predicted_dp2 = math.copysign(predicted_abs_dp2, dpos)
                 predicted_p2 = path[1].pos + predicted_dp2
-                predicted_dt2 = abs(predicted_dp2)/max_vel
+                predicted_dt2 = abs(predicted_dp2)/max_velocity
                 predicted_t2 = path[1].tai + predicted_dt2
                 self.assertAlmostEqual(path[2].tai, predicted_t2, places=4)
                 self.assertAlmostEqual(path[2].pos, predicted_p2)
-                self.assertAlmostEqual(abs(path[2].vel), max_vel)
+                self.assertAlmostEqual(abs(path[2].vel), max_velocity)
                 self.assertAlmostEqual(path[2].accel, -path[0].accel)
 
-                predicted_duration = 2*dt_max_vel + predicted_dt2
+                predicted_duration = 2*dt_max_velocity + predicted_dt2
                 predicted_t3 = tai + predicted_duration
                 self.assertAlmostEqual(path[3].tai, predicted_t3, places=4)
-                self.assertAlmostEqual(path[3].pos, end_pos)
+                self.assertAlmostEqual(path[3].pos, end_position)
                 self.assertAlmostEqual(path[3].vel, 0)
                 self.assertAlmostEqual(path[3].accel, 0)
 
     def test_short_fixed_points(self):
         """Test a fixed point to fixed point slew that is long enough
-        to have a segment with constant velocity=+/-max_vel
+        to have a segment with constant velocity=+/-max_velocity
 
         This case is trivial to guess the required answer.
         """
         # Arbitrary but reasonable values
         tai = 1560000000
-        max_vel = 3.5
-        max_accel = 2.1
+        max_velocity = 3.5
+        max_acceleration = 2.1
 
         # compute expected delta time and distance covered
         # going from 0 velocity to full velocity at full acceleration
-        dt_max_vel = max_vel/max_accel
-        dp_max_vel = 0.5*max_accel*dt_max_vel**2
+        dt_max_velocity = max_velocity/max_acceleration
+        dp_max_velocity = 0.5*max_acceleration*dt_max_velocity**2
 
-        for start_pos in (-5, 0):
-            for dpos in (0.1*dp_max_vel, -0.9*dp_max_vel):
+        for start_position in (-5, 0):
+            for dpos in (0.1*dp_max_velocity, -0.9*dp_max_velocity):
                 # not enough time to ramp up to full speed
-                end_pos = start_pos + dpos
+                end_position = start_position + dpos
                 path = simactuators.path.slew(tai=tai,
-                                              start_pos=start_pos, start_vel=0,
-                                              end_pos=end_pos, end_vel=0,
-                                              max_vel=max_vel, max_accel=max_accel)
+                                              start_position=start_position, start_velocity=0,
+                                              end_position=end_position, end_velocity=0,
+                                              max_velocity=max_velocity, max_acceleration=max_acceleration)
                 self.assertEqual(path.kind, simactuators.path.Kind.Slewing)
                 self.check_path(path, tai=tai,
-                                start_pos=start_pos, start_vel=0,
-                                end_pos=end_pos, end_vel=0,
-                                max_vel=max_vel, max_accel=max_accel)
+                                start_position=start_position, start_velocity=0,
+                                end_position=end_position, end_velocity=0,
+                                max_velocity=max_velocity, max_acceleration=max_acceleration)
 
                 self.assertEqual(len(path), 3)
                 self.assertAlmostEqual(path[0].tai, tai)
-                self.assertAlmostEqual(path[0].pos, start_pos)
+                self.assertAlmostEqual(path[0].pos, start_position)
                 self.assertAlmostEqual(path[0].vel, 0)
-                self.assertAlmostEqual(path[0].accel, math.copysign(max_accel, dpos))
+                self.assertAlmostEqual(path[0].accel, math.copysign(max_acceleration, dpos))
 
-                predicted_dt1 = math.sqrt(abs(dpos)/max_accel)
+                predicted_dt1 = math.sqrt(abs(dpos)/max_acceleration)
                 predicted_t1 = tai + predicted_dt1
-                predicted_p1 = start_pos + dpos/2
-                predicted_v1 = predicted_dt1*max_accel
+                predicted_p1 = start_position + dpos/2
+                predicted_v1 = predicted_dt1*max_acceleration
                 self.assertAlmostEqual(path[1].tai, predicted_t1, places=4)
                 self.assertAlmostEqual(path[1].pos, predicted_p1)
                 self.assertAlmostEqual(abs(path[1].vel), predicted_v1)
@@ -211,89 +212,92 @@ class TestSlew(unittest.TestCase):
 
                 predicted_t2 = tai + 2*predicted_dt1
                 self.assertAlmostEqual(path[2].tai, predicted_t2, places=4)
-                self.assertAlmostEqual(path[2].pos, end_pos)
+                self.assertAlmostEqual(path[2].pos, end_position)
                 self.assertAlmostEqual(path[2].vel, 0)
                 self.assertAlmostEqual(path[2].accel, 0)
 
     def test_other_slews(self):
         # Arbitrary but reasonable values
         tai = 1560000000
-        max_vel = 3.1
-        max_accel = 1.76
-        dt_max_vel = max_vel/max_accel
+        max_velocity = 3.1
+        max_acceleration = 1.76
+        dt_max_velocity = max_velocity/max_acceleration
 
-        for start_pos, dpos, start_vel, dvel in itertools.product(
-            (-5, 0), (dt_max_vel*0.1, dt_max_vel*10), (-max_vel, -2, 0, 1, max_vel), (-1, 0, 2),
+        for start_position, dpos, start_velocity, dvel in itertools.product(
+            (-5, 0),
+            (dt_max_velocity*0.1, dt_max_velocity*10),
+            (-max_velocity, -2, 0, 1, max_velocity),
+            (-1, 0, 2),
         ):
-            end_pos = start_pos + dpos
-            end_vel = start_vel + dvel
-            if abs(end_vel) > max_vel/simactuators.path.SLEW_FUDGE:
+            end_position = start_position + dpos
+            end_velocity = start_velocity + dvel
+            if abs(end_velocity) > max_velocity/simactuators.path.SLEW_FUDGE:
                 continue
             path = simactuators.path.slew(tai=tai,
-                                          start_pos=start_pos, start_vel=start_vel,
-                                          end_pos=end_pos, end_vel=end_vel,
-                                          max_vel=max_vel, max_accel=max_accel)
+                                          start_position=start_position, start_velocity=start_velocity,
+                                          end_position=end_position, end_velocity=end_velocity,
+                                          max_velocity=max_velocity, max_acceleration=max_acceleration)
             self.assertEqual(path.kind, simactuators.path.Kind.Slewing)
             self.check_path(path, tai=tai,
-                            start_pos=start_pos, start_vel=start_vel,
-                            end_pos=end_pos, end_vel=end_vel,
-                            max_vel=max_vel, max_accel=max_accel)
+                            start_position=start_position, start_velocity=start_velocity,
+                            end_position=end_position, end_velocity=end_velocity,
+                            max_velocity=max_velocity, max_acceleration=max_acceleration)
 
     def test_invalid_inputs(self):
         # Arbitrary but reasonable values
         tai = 1530000000
-        max_vel = 3.1
-        max_accel = 1.76
-        start_pos = 1
-        end_pos = 2
-        start_vel = -2
-        end_vel = 3
+        max_velocity = 3.1
+        max_acceleration = 1.76
+        start_position = 1
+        end_position = 2
+        start_velocity = -2
+        end_velocity = 3
         # Local version of SLEW_FUDGE with a bit of margin to avoid
         # test failure due to roundoff error
         fudge = simactuators.path.SLEW_FUDGE*1.000001
 
-        # max_vel must be >= 0
+        # max_velocity must be >= 0
         with self.assertRaises(ValueError):
             simactuators.path.slew(tai=tai,
-                                   start_pos=start_pos, start_vel=start_vel,
-                                   end_pos=end_pos, end_vel=end_vel,
-                                   max_vel=0, max_accel=max_accel)
+                                   start_position=start_position, start_velocity=start_velocity,
+                                   end_position=end_position, end_velocity=end_velocity,
+                                   max_velocity=0, max_acceleration=max_acceleration)
         with self.assertRaises(ValueError):
             simactuators.path.slew(tai=tai,
-                                   start_pos=start_pos, start_vel=start_vel,
-                                   end_pos=end_pos, end_vel=end_vel,
-                                   max_vel=-1, max_accel=max_accel)
+                                   start_position=start_position, start_velocity=start_velocity,
+                                   end_position=end_position, end_velocity=end_velocity,
+                                   max_velocity=-1, max_acceleration=max_acceleration)
 
-        # max_accel must be >= 0
+        # max_acceleration must be >= 0
         with self.assertRaises(ValueError):
             simactuators.path.slew(tai=tai,
-                                   start_pos=start_pos, start_vel=start_vel,
-                                   end_pos=end_pos, end_vel=end_vel,
-                                   max_vel=max_vel, max_accel=0)
+                                   start_position=start_position, start_velocity=start_velocity,
+                                   end_position=end_position, end_velocity=end_velocity,
+                                   max_velocity=max_velocity, max_acceleration=0)
         with self.assertRaises(ValueError):
             simactuators.path.slew(tai=tai,
-                                   start_pos=start_pos, start_vel=start_vel,
-                                   end_pos=end_pos, end_vel=end_vel,
-                                   max_vel=max_vel, max_accel=-1)
+                                   start_position=start_position, start_velocity=start_velocity,
+                                   end_position=end_position, end_velocity=end_velocity,
+                                   max_velocity=max_velocity, max_acceleration=-1)
 
         for sign in (-1, 1):
-            # |start_vel| must be < max_vel*FUDDGE
+            # |start_velocity| must be < max_velocity*FUDDGE
             with self.assertRaises(ValueError):
                 simactuators.path.slew(tai=tai,
-                                       start_pos=start_pos, start_vel=sign*max_vel*fudge,
-                                       end_pos=end_pos, end_vel=end_vel,
-                                       max_vel=max_vel, max_accel=max_accel)
+                                       start_position=start_position, start_velocity=sign*max_velocity*fudge,
+                                       end_position=end_position, end_velocity=end_velocity,
+                                       max_velocity=max_velocity, max_acceleration=max_acceleration)
             with self.assertRaises(ValueError):
                 simactuators.path.slew(tai=tai,
-                                       start_pos=start_pos, start_vel=sign*max_vel*2,
-                                       end_pos=end_pos, end_vel=end_vel,
-                                       max_vel=max_vel, max_accel=max_accel)
-            # |end_vel| must be < max_vel/FUDDGE
+                                       start_position=start_position, start_velocity=sign*max_velocity*2,
+                                       end_position=end_position, end_velocity=end_velocity,
+                                       max_velocity=max_velocity, max_acceleration=max_acceleration)
+            # |end_velocity| must be < max_velocity/FUDDGE
             with self.assertRaises(ValueError):
                 simactuators.path.slew(tai=tai,
-                                       start_pos=start_pos, start_vel=start_vel,
-                                       end_pos=end_pos, end_vel=sign*max_vel*fudge,
-                                       max_vel=max_vel, max_accel=max_accel)
+                                       start_position=start_position, start_velocity=start_velocity,
+                                       end_position=end_position, end_velocity=sign*max_velocity*fudge,
+                                       max_velocity=max_velocity, max_acceleration=max_acceleration)
 
 
 if __name__ == '__main__':
