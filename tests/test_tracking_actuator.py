@@ -90,7 +90,10 @@ class TestTrackingActuator(unittest.TestCase):
         self.assertEqual(actuator.current.kind, actuator.Kind.Stopped)
 
         # pos is 0 if in range [min_position, max_position) else min_position
-        for min_position, max_position in itertools.product((-10, 0, 10), (-9, -1, 9)):
+        for min_position, max_position in itertools.product(
+            (-10, 0, 10),
+            (-9, -1, 9),
+        ):
             if max_position <= min_position:
                 continue
             if min_position <= 0 <= max_position:
@@ -191,7 +194,9 @@ class TestTrackingActuator(unittest.TestCase):
         max_acceleration = 10  # maximum allowed acceleration (deg/sec^2)
         cmd_interval = 0.05  # interval between commanded points (sec)
         for pos_ampl, vel_off, frac_phase in itertools.product(
-            (0.1, 0.3), (0, 0.1, -0.2), (0, 0.2, 0.7),
+            (0.1, 0.3),
+            (0, 0.1, -0.2),
+            (0, 0.2, 0.7),
         ):
             with self.subTest(pos_ampl=pos_ampl, vel_off=vel_off, frac_phase=frac_phase):
                 self.check_sin_path(
@@ -226,7 +231,10 @@ class TestTrackingActuator(unittest.TestCase):
         max_acceleration = 5
         cmd_interval = 0.05
         for pos_off, pos_ampl, vel_off, frac_phase in itertools.product(
-            (1, -30, 30), (0.1, 0.3), (0, -0.1, 0.2), (0, 0.2, 0.7),
+            (1, -30, 30),
+            (0.1, 0.3),
+            (0, -0.1, 0.2),
+            (0, 0.2, 0.7),
         ):
             with self.subTest(pos_off=pos_off, pos_ampl=pos_ampl, vel_off=vel_off, frac_phase=frac_phase):
                 self.check_sin_path(
@@ -247,7 +255,8 @@ class TestTrackingActuator(unittest.TestCase):
 
     def test_stop(self):
         for pos_off, vel_off in itertools.product(
-            (30, -30), (0, 1, -1),
+            (30, -30),
+            (0, 1, -1),
         ):
             cmd_interval = 0.05
             with self.subTest(pos_off=pos_off, vel_off=vel_off):
@@ -288,7 +297,8 @@ class TestTrackingActuator(unittest.TestCase):
 
     def test_abort(self):
         for pos_off, vel_off in itertools.product(
-            (30, -30), (0, 1, -1),
+            (30, -30),
+            (0, 1, -1),
         ):
             cmd_interval = 0.05
             with self.subTest(pos_off=pos_off, vel_off=vel_off):

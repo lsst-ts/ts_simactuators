@@ -35,39 +35,56 @@ class TestPointToPointActuator(asynctest.TestCase):
         pos = 3
         speed = 1.5
         for good_pos in (pos, min_position, max_position):
-            actuator = simactuators.PointToPointActuator(min_position=min_position, max_position=max_position,
-                                                         pos=good_pos, speed=speed)
-            self.assertEqual(actuator.current_position, good_pos)
-            self.assertFalse(actuator.moving)
-            self.assertEqual(actuator.remaining_time, 0)
+            with self.subTest(good_pos=good_pos):
+                actuator = simactuators.PointToPointActuator(min_position=min_position,
+                                                             max_position=max_position,
+                                                             pos=good_pos,
+                                                             speed=speed)
+                self.assertEqual(actuator.current_position, good_pos)
+                self.assertFalse(actuator.moving)
+                self.assertEqual(actuator.remaining_time, 0)
 
         for bad_min_position in (max_position, max_position+0.001):
-            with self.assertRaises(ValueError):
-                simactuators.PointToPointActuator(min_position=bad_min_position, max_position=max_position,
-                                                  pos=max_position, speed=speed)
+            with self.subTest(bad_min_position=bad_min_position):
+                with self.assertRaises(ValueError):
+                    simactuators.PointToPointActuator(min_position=bad_min_position,
+                                                      max_position=max_position,
+                                                      pos=max_position,
+                                                      speed=speed)
 
         for bad_max_position in (min_position, min_position-0.001):
-            with self.assertRaises(ValueError):
-                simactuators.PointToPointActuator(min_position=min_position, max_position=bad_max_position,
-                                                  pos=min_position, speed=speed)
+            with self.subTest(bad_max_position=bad_max_position):
+                with self.assertRaises(ValueError):
+                    simactuators.PointToPointActuator(min_position=min_position,
+                                                      max_position=bad_max_position,
+                                                      pos=min_position,
+                                                      speed=speed)
 
         for bad_pos in (min_position-0.001, max_position+0.001):
-            with self.assertRaises(ValueError):
-                simactuators.PointToPointActuator(min_position=min_position, max_position=max_position,
-                                                  pos=bad_pos, speed=speed)
+            with self.subTest(bad_pos=bad_pos):
+                with self.assertRaises(ValueError):
+                    simactuators.PointToPointActuator(min_position=min_position,
+                                                      max_position=max_position,
+                                                      pos=bad_pos,
+                                                      speed=speed)
 
         for bad_speed in (0, -0.001):
-            with self.assertRaises(ValueError):
-                simactuators.PointToPointActuator(min_position=min_position, max_position=max_position,
-                                                  pos=pos, speed=bad_speed)
+            with self.subTest(bad_speed=bad_speed):
+                with self.assertRaises(ValueError):
+                    simactuators.PointToPointActuator(min_position=min_position,
+                                                      max_position=max_position,
+                                                      pos=pos,
+                                                      speed=bad_speed)
 
     async def test_set_pos(self):
         min_position = -10
         max_position = 10
         pos = 3
         speed = 2
-        actuator = simactuators.PointToPointActuator(min_position=min_position, max_position=max_position,
-                                                     pos=pos, speed=speed)
+        actuator = simactuators.PointToPointActuator(min_position=min_position,
+                                                     max_position=max_position,
+                                                     pos=pos,
+                                                     speed=speed)
         new_pos = 4
         # Keep track of how long it takes to call set_pos and remaining_time
         # so we know how picky to be when testing remaining_time
@@ -93,8 +110,10 @@ class TestPointToPointActuator(asynctest.TestCase):
         max_position = 10
         pos = 3
         speed = 2
-        actuator = simactuators.PointToPointActuator(min_position=min_position, max_position=max_position,
-                                                     pos=pos, speed=speed)
+        actuator = simactuators.PointToPointActuator(min_position=min_position,
+                                                     max_position=max_position,
+                                                     pos=pos,
+                                                     speed=speed)
 
         # If start_position == end_position direction is 1.
         self.assertEqual(actuator.start_position, actuator.end_position)
@@ -118,8 +137,10 @@ class TestPointToPointActuator(asynctest.TestCase):
         pos = 3
         # Slow motion so plenty of time to stop
         speed = 0.1
-        actuator = simactuators.PointToPointActuator(min_position=min_position, max_position=max_position,
-                                                     pos=pos, speed=speed)
+        actuator = simactuators.PointToPointActuator(min_position=min_position,
+                                                     max_position=max_position,
+                                                     pos=pos,
+                                                     speed=speed)
         new_pos = 4
         call_start_time = time.monotonic()
         actuator.set_pos(new_pos)

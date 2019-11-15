@@ -74,14 +74,14 @@ class TestStop(unittest.TestCase):
         max_acceleration = 10
 
         for pos, vel in itertools.product(
-            (-5, 0, 30), (-3, -1, 2, 4),
+            (-5, 0, 30),
+            (-3, -1, 2, 4),
         ):
-            path = simactuators.path.stop(tai=tai, pos=pos,
-                                          vel=vel, max_acceleration=max_acceleration)
-            self.assertEqual(path.kind, simactuators.path.Kind.Stopping)
-            self.assertEqual(len(path), 2)
-            self.check_path(path, tai=tai,
-                            pos=pos, vel=vel, max_acceleration=max_acceleration)
+            with self.subTest(pos=pos, vel=vel):
+                path = simactuators.path.stop(tai=tai, pos=pos, vel=vel, max_acceleration=max_acceleration)
+                self.assertEqual(path.kind, simactuators.path.Kind.Stopping)
+                self.assertEqual(len(path), 2)
+                self.check_path(path, tai=tai, pos=pos, vel=vel, max_acceleration=max_acceleration)
 
     def test_already_stopped(self):
         """Test stop when already stopped."""
@@ -90,13 +90,10 @@ class TestStop(unittest.TestCase):
         max_acceleration = 2
 
         for pos in (-5, 0, 30):
-            path = simactuators.path.stop(tai=tai, pos=pos,
-                                          vel=0, max_acceleration=max_acceleration)
+            path = simactuators.path.stop(tai=tai, pos=pos, vel=0, max_acceleration=max_acceleration)
             self.assertEqual(len(path), 1)
             self.assertEqual(path.kind, simactuators.path.Kind.Stopped)
-            self.check_path(path, tai=tai,
-                            pos=pos, vel=0,
-                            max_acceleration=max_acceleration)
+            self.check_path(path, tai=tai, pos=pos, vel=0, max_acceleration=max_acceleration)
 
     def test_invalid_inputs(self):
         # Arbitrary but reasonable values
@@ -106,11 +103,9 @@ class TestStop(unittest.TestCase):
 
         # max_acceleration must be >= 0
         with self.assertRaises(ValueError):
-            simactuators.path.stop(tai=tai, pos=pos,
-                                   vel=vel, max_acceleration=0)
+            simactuators.path.stop(tai=tai, pos=pos, vel=vel, max_acceleration=0)
         with self.assertRaises(ValueError):
-            simactuators.path.stop(tai=tai, pos=pos,
-                                   vel=vel, max_acceleration=-1)
+            simactuators.path.stop(tai=tai, pos=pos, vel=vel, max_acceleration=-1)
 
 
 if __name__ == '__main__':

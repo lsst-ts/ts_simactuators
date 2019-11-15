@@ -36,8 +36,12 @@ class TestPathSegment(unittest.TestCase):
         start_tai = 45.3  # any value will do
         end_tai = start_tai + dt
         segment = simactuators.path.PathSegment.from_end_conditions(
-            start_tai=start_tai, start_position=start_position, start_velocity=start_velocity,
-            end_tai=end_tai, end_position=end_position, end_velocity=end_velocity)
+            start_tai=start_tai,
+            start_position=start_position,
+            start_velocity=start_velocity,
+            end_tai=end_tai,
+            end_position=end_position,
+            end_velocity=end_velocity)
         self.assertAlmostEqual(segment.tai, start_tai)
         self.assertAlmostEqual(segment.pos, start_position)
         self.assertAlmostEqual(segment.vel, start_velocity)
@@ -73,7 +77,11 @@ class TestPathSegment(unittest.TestCase):
 
     def test_from_end_conditions(self):
         for start_position, start_velocity, end_position, end_velocity, dt in itertools.product(
-            (0, -0.5, 0.2), (0, -0.2, 0.1), (0, 0.3, -0.6), (0, 0.3, -0.2), (1, 5),
+            (0, -0.5, 0.2),
+            (0, -0.2, 0.1),
+            (0, 0.3, -0.6),
+            (0, 0.3, -0.2),
+            (1, 5),
         ):
             with self.subTest(start_position=start_position,
                               start_velocity=start_velocity,
@@ -137,14 +145,15 @@ class TestPathSegment(unittest.TestCase):
         for field_to_omit in full_kwargs:
             if field_to_omit == "tai":
                 continue
-            kwargs = full_kwargs.copy()
-            del kwargs[field_to_omit]
-            segment = simactuators.path.PathSegment(**kwargs)
-            for field_name in full_kwargs:
-                if field_name == field_to_omit:
-                    self.assertEqual(getattr(segment, field_name), 0)
-                else:
-                    self.assertEqual(getattr(segment, field_name), full_kwargs[field_name])
+            with self.subTest(field_to_omit=field_to_omit):
+                kwargs = full_kwargs.copy()
+                del kwargs[field_to_omit]
+                segment = simactuators.path.PathSegment(**kwargs)
+                for field_name in full_kwargs:
+                    if field_name == field_to_omit:
+                        self.assertEqual(getattr(segment, field_name), 0)
+                    else:
+                        self.assertEqual(getattr(segment, field_name), full_kwargs[field_name])
 
     def test_invalid_inputs(self):
         """Test invalid inputs for PathSegment.from_end_conditions.
