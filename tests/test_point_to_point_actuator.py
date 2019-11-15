@@ -76,7 +76,7 @@ class TestPointToPointActuator(asynctest.TestCase):
                                                       pos=pos,
                                                       speed=bad_speed)
 
-    async def test_set_pos(self):
+    async def test_set_position(self):
         min_position = -10
         max_position = 10
         pos = 3
@@ -86,14 +86,15 @@ class TestPointToPointActuator(asynctest.TestCase):
                                                      pos=pos,
                                                      speed=speed)
         new_pos = 4
-        # Keep track of how long it takes to call set_pos and remaining_time
-        # so we know how picky to be when testing remaining_time
+        # Keep track of how long it takes to call `set_position`
+        # and `remaining_time`, so we know how picky to be
+        # when testing `remaining_time`.
         call_start_time = time.monotonic()
-        actuator.set_pos(new_pos)
+        actuator.set_position(new_pos)
         rem_time = actuator.remaining_time
         time_slop = time.monotonic() - call_start_time
         desired_rem_time = abs(new_pos - pos)/speed
-        # It takes finite time to call set_pos and remaining_time;
+        # It takes finite time to call set_position and remaining_time;
         # that time slop determines how accurately we can predict
         # the value of remaining_time.
         time_error = abs(desired_rem_time - rem_time)
@@ -120,7 +121,7 @@ class TestPointToPointActuator(asynctest.TestCase):
         self.assertEqual(actuator.direction, 1)
 
         # Move in the positive direction.
-        actuator.set_pos(pos + 1)
+        actuator.set_position(pos + 1)
         self.assertEqual(actuator.direction, 1)
         # Give the actuator time to move a bit.
         await asyncio.sleep(0.01)
@@ -128,7 +129,7 @@ class TestPointToPointActuator(asynctest.TestCase):
         self.assertEqual(actuator.direction, 1)
 
         # Move in the negative direction (back to pos).
-        actuator.set_pos(pos)
+        actuator.set_position(pos)
         self.assertEqual(actuator.direction, -1)
 
     async def test_stop(self):
@@ -143,7 +144,7 @@ class TestPointToPointActuator(asynctest.TestCase):
                                                      speed=speed)
         new_pos = 4
         call_start_time = time.monotonic()
-        actuator.set_pos(new_pos)
+        actuator.set_position(new_pos)
         self.assertEqual(actuator.end_position, new_pos)
         self.assertTrue(actuator.moving)
 
@@ -152,7 +153,7 @@ class TestPointToPointActuator(asynctest.TestCase):
         await asyncio.sleep(move_time)
         actuator.stop()
         call_duration = time.monotonic() - call_start_time
-        # It takes a bit longer to call set_pos, sleep and stop
+        # It takes a bit longer to call set_position, sleep and stop
         # than the sleep time. That time slop determines how accurately
         # we can to predict the stopped position.
         time_slop = call_duration - move_time

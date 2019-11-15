@@ -28,7 +28,8 @@ from . import path
 
 
 def stop(tai, pos, vel, max_acceleration):
-    """Compute a path to stop as quickly as possible.
+    """Compute a path to stop as quickly as possible,
+    starting from a path of constant velocity.
 
     Parameters
     ----------

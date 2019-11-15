@@ -51,8 +51,8 @@ class TrackingActuator:
         (meaning ``self.current.kind`` is tracking)
         before ``self.kind(tai)`` reports tracking instead of slewing.
     tai : `float` (optional)
-        Initial time for the ``self.target`` and ``self.current``
-        (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+        TAI time for ``self.target`` and ``self.current``
+        (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
 
@@ -182,8 +182,8 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float` (optional)
-            Initial time for ``self.target`` and ``self.current``
-            (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            TAI time for ``self.target`` and ``self.current``
+            (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         """
@@ -202,8 +202,8 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float` (optional)
-            Initial time for ``self.target`` and ``self.current``
-            (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            TAI time for ``self.target`` and ``self.current``
+            (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         pos : `float` (optional)
@@ -222,7 +222,7 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float` (optional)
-            Time at which to evaluate the kind of path
+            TAI time at which to evaluate the kind of path
             (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             Ignored unless stopping.
@@ -231,8 +231,8 @@ class TrackingActuator:
 
         - After a slew we report ``path.kind.Slewing`` until ``nsettle``
           consecutive calls to `set_target` result in a path that is tracking.
-        - if self.current.kind is stopping and tai > start time
-          of last segment then the kind is reported as stopped.
+        - If self.current.kind is stopping and tai > start time of the
+          last segment, then the kind is reported as stopped.
         """
         if tai is None:
             tai = salobj.current_tai()

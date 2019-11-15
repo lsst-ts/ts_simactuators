@@ -72,19 +72,21 @@ class PathSegment:
     @classmethod
     def from_end_conditions(cls, start_tai, start_position, start_velocity,
                             end_tai, end_position, end_velocity):
-        """Create a path segment from end conditions.
+        """Create a path segment that connects two paths of constant
+        velocity.
 
         Parameters
         ----------
         start_tai : `float`
-            Initial time (TAI unix seconds, e.g. from
+            TAI time for start path (unix seconds, e.g. from
             lsst.ts.salobj.curr_tai()).
         start_position : `float` (optional)
             Position at ``start_tai`` (deg)
         start_velocity : `float` (optional)
             Velocity at ``start_tai`` (deg/sec)
         end_tai : `float`
-            Final time (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            TAI time for end path (unix seconds,
+            e.g. from lsst.ts.salobj.curr_tai()).
         end_position : `float` (optional)
             Position at ``end_tai`` (deg)
         end_velocity : `float` (optional)
@@ -111,7 +113,8 @@ class PathSegment:
                    jerk=jerk)
 
     def limits(self, end_tai):
-        """Compute limits of motion given an end time.
+        """Compute the limits of motion between ``self.tai``
+        and a given end time.
 
         Parameters
         ----------

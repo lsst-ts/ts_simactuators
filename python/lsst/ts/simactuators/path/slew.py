@@ -32,14 +32,15 @@ SLEW_FUDGE = 1.05
 """Fudge factor to avoid borderline cases; should be a bit larger than 1"""
 
 
-def slew(tai, start_position, start_velocity, end_position, end_velocity, max_velocity, max_acceleration):
+def slew(tai, start_position, start_velocity, end_position,
+         end_velocity, max_velocity, max_acceleration):
     """Compute a trapezoidal slew from a start path of constant velocity
     to and end path of constant velocity.
 
     Parameters
     ----------
     tai : `float`
-        Start time of slew.
+        TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
     start_position : `float`
         Position of A at time ``tai`` (deg)
     start_velocity : `float`

@@ -28,8 +28,6 @@ class PointToPointActuator:
     """Simulated actuator that moves to a specified position at constant
     velocity and halts.
 
-    Poll to get the current state.
-
     Parameters
     ----------
     min_position : `float`
@@ -77,7 +75,7 @@ class PointToPointActuator:
         """
         return self._end_position
 
-    def set_pos(self, pos):
+    def set_position(self, pos):
         """Set a new desired position.
 
         Raises

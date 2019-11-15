@@ -86,7 +86,7 @@ class Path:
         return len(self.segments)
 
     def __getitem__(self, ind):
-        """Indexed access to the PVATs that make up the path."""
+        r"""Indexed access to the `PathSegment`\s that make up the path."""
         return self.segments[ind]
 
     def __repr__(self):
