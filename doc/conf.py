@@ -10,4 +10,4 @@ import lsst.ts.simactuators
 _g = globals()
 _g.update(build_package_configs(
     project_name='ts_simactuators',
-    version=lsst.ts.simactuators.version.__version__))
+    version=lsst.ts.simactuators.__version__))
