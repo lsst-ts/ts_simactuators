@@ -43,18 +43,18 @@ class TestPathSegment(unittest.TestCase):
             end_position=end_position,
             end_velocity=end_velocity)
         self.assertAlmostEqual(segment.tai, start_tai)
-        self.assertAlmostEqual(segment.pos, start_position)
-        self.assertAlmostEqual(segment.vel, start_velocity)
+        self.assertAlmostEqual(segment.position, start_position)
+        self.assertAlmostEqual(segment.velocity, start_velocity)
 
-        pva_end = segment.at(end_tai)
-        self.assertAlmostEqual(pva_end.pos, end_position)
-        self.assertAlmostEqual(pva_end.vel, end_velocity)
-        start_accel = segment.accel
+        end_segment = segment.at(end_tai)
+        self.assertAlmostEqual(end_segment.position, end_position)
+        self.assertAlmostEqual(end_segment.velocity, end_velocity)
+        start_accel = segment.acceleration
         jerk = segment.jerk
         desired_end_position = start_position + dt*(start_velocity + dt*(0.5*start_accel + dt*(1/6)*jerk))
         desired_end_velocity = start_velocity + dt*(start_accel + dt*0.5*jerk)
-        self.assertAlmostEqual(pva_end.pos, desired_end_position)
-        self.assertAlmostEqual(pva_end.vel, desired_end_velocity)
+        self.assertAlmostEqual(end_segment.position, desired_end_position)
+        self.assertAlmostEqual(end_segment.velocity, desired_end_velocity)
 
         # estimate position and velocity limits by computing at many points
         desired_min_position = min(start_position, end_position)
@@ -96,23 +96,27 @@ class TestPathSegment(unittest.TestCase):
 
     def test_basics(self):
         tai = 1573847242.4
-        pos = 5.1
-        vel = 4.3
-        accel = 0.23
+        position = 5.1
+        velocity = 4.3
+        acceleration = 0.23
         jerk = 0.05
-        segment = simactuators.path.PathSegment(tai=tai, pos=pos, vel=vel, accel=accel, jerk=jerk)
+        segment = simactuators.path.PathSegment(tai=tai,
+                                                position=position,
+                                                velocity=velocity,
+                                                acceleration=acceleration,
+                                                jerk=jerk)
         self.assertEqual(segment.tai, tai)
-        self.assertEqual(segment.pos, pos)
-        self.assertEqual(segment.vel, vel)
-        self.assertEqual(segment.accel, accel)
+        self.assertEqual(segment.position, position)
+        self.assertEqual(segment.velocity, velocity)
+        self.assertEqual(segment.acceleration, acceleration)
         self.assertEqual(segment.jerk, jerk)
 
         # The at command at the same time should return a copy
         copied_segment = segment.at(tai)
         self.assertEqual(copied_segment.tai, tai)
-        self.assertAlmostEqual(copied_segment.pos, pos)
-        self.assertAlmostEqual(copied_segment.vel, vel)
-        self.assertAlmostEqual(copied_segment.accel, accel)
+        self.assertAlmostEqual(copied_segment.position, position)
+        self.assertAlmostEqual(copied_segment.velocity, velocity)
+        self.assertAlmostEqual(copied_segment.acceleration, acceleration)
         self.assertEqual(copied_segment.jerk, jerk)
 
         for dt in (-5.1, -3.23, 1.23, 6.6):
@@ -123,13 +127,13 @@ class TestPathSegment(unittest.TestCase):
                 # `PathSegment` (to avoid an exact copy),
                 # so the computed values will be slightly different,
                 # especially position and to a lessar extent velocity.
-                expected_pos = pos + vel*dt + accel*dt*dt/2 + jerk*dt*dt*dt/6
-                expected_vel = vel + accel*dt + jerk*dt*dt/2
-                expected_accel = accel + jerk*dt
+                expected_pos = position + velocity*dt + acceleration*dt*dt/2 + jerk*dt*dt*dt/6
+                expected_vel = velocity + acceleration*dt + jerk*dt*dt/2
+                expected_accel = acceleration + jerk*dt
                 self.assertEqual(new_segment.tai, new_tai)
-                self.assertAlmostEqual(new_segment.pos, expected_pos, places=5)
-                self.assertAlmostEqual(new_segment.vel, expected_vel, places=6)
-                self.assertAlmostEqual(new_segment.accel, expected_accel)
+                self.assertAlmostEqual(new_segment.position, expected_pos, places=5)
+                self.assertAlmostEqual(new_segment.velocity, expected_vel, places=6)
+                self.assertAlmostEqual(new_segment.acceleration, expected_accel)
                 self.assertEqual(new_segment.jerk, jerk)
 
     def test_default_arguments(self):
@@ -137,9 +141,9 @@ class TestPathSegment(unittest.TestCase):
         """
         full_kwargs = dict(
             tai=1573847242.4,
-            pos=5.1,
-            vel=4.3,
-            accel=0.23,
+            position=5.1,
+            velocity=4.3,
+            acceleration=0.23,
             jerk=0.05,
         )
         for field_to_omit in full_kwargs:

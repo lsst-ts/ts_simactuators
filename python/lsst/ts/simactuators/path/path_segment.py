@@ -53,20 +53,20 @@ class PathSegment:
     ----------
     tai : `float`
         TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
-    pos : `float` at time ``tai`` (optional)
+    position : `float` at time ``tai`` (optional)
         Position (deg)
-    vel : `float` at time ``tai`` (optional)
+    velocity : `float` at time ``tai`` (optional)
         Velocity at time ``tai`` (deg/sec)
-    accel : `float` (optional)
+    acceleration : `float` (optional)
         Acceleration at time ``tai`` (deg/sec^2)
     jerk : `float` (optional)
         Jerk (deg/sec^3)
     """
-    def __init__(self, tai, pos=0, vel=0, accel=0, jerk=0):
+    def __init__(self, tai, position=0, velocity=0, acceleration=0, jerk=0):
         self.tai = float(tai)
-        self.pos = float(pos)
-        self.vel = float(vel)
-        self.accel = float(accel)
+        self.position = float(position)
+        self.velocity = float(velocity)
+        self.acceleration = float(acceleration)
         self.jerk = float(jerk)
 
     @classmethod
@@ -107,9 +107,9 @@ class PathSegment:
         jerk = (((start_velocity + end_velocity)/2) - mean_vel)*12/(dt*dt)
 
         return cls(tai=start_tai,
-                   pos=start_position,
-                   vel=start_velocity,
-                   accel=start_accel,
+                   position=start_position,
+                   velocity=start_velocity,
+                   acceleration=start_accel,
                    jerk=jerk)
 
     def limits(self, end_tai):
@@ -141,15 +141,15 @@ class PathSegment:
         # at the endpoints or at time t_vex = -start_accel/jerk.
         # Compute t_vex and vex = v(t_vex); if t_vex is not in range [0, dt),
         # set t_vex = 0, so that vex = start_velocity
-        end_pva = self.at(end_tai)
+        end_segment = self.at(end_tai)
 
-        if abs(self.accel) < abs(self.jerk * dt):
-            t_vex = max(-self.accel/self.jerk, 0.0)
+        if abs(self.acceleration) < abs(self.jerk * dt):
+            t_vex = max(-self.acceleration/self.jerk, 0.0)
         else:
             t_vex = 0.0
-        vex = self.vel + t_vex*(self.accel + (t_vex/2)*self.jerk)
-        max_velocity = max(abs(self.vel), abs(end_pva.vel), abs(vex))
-        max_acceleration = max(abs(self.accel), abs(end_pva.accel))
+        vex = self.velocity + t_vex*(self.acceleration + (t_vex/2)*self.jerk)
+        max_velocity = max(abs(self.velocity), abs(end_segment.velocity), abs(vex))
+        max_acceleration = max(abs(self.acceleration), abs(end_segment.acceleration))
 
         t_pexArr = [0]*2
         numArr = [0]*2
@@ -158,19 +158,19 @@ class PathSegment:
         # Compute the two times t_pexArr,
         # and positions pexArr = p(t_pexArr).
         # If a t_pexArr is out of range [0, dt), set it to 0
-        # (so its pexArr = self.pos).
-        if abs(self.vel) < abs(self.accel * dt):
-            t_pex_zeroj = max(-self.vel / self.accel, 0.0)
+        # (so its pexArr = self.position).
+        if abs(self.velocity) < abs(self.acceleration * dt):
+            t_pex_zeroj = max(-self.velocity / self.acceleration, 0.0)
         else:
             t_pex_zeroj = 0.0
-        sqrt_arg = (self.accel * self.accel) - (2.0 * self.vel * self.jerk)
+        sqrt_arg = (self.acceleration * self.acceleration) - (2.0 * self.velocity * self.jerk)
         if sqrt_arg < 0.0:
             t_pexArr[0] = 0.0
             t_pexArr[1] = 0.0
         else:
             sqrt_val = math.sqrt(sqrt_arg)
-            numArr[0] = -self.accel - sqrt_val
-            numArr[1] = -self.accel + sqrt_val
+            numArr[0] = -self.acceleration - sqrt_val
+            numArr[1] = -self.acceleration + sqrt_val
             for branch in range(2):
                 if abs(numArr[branch]) < abs(self.jerk * dt):
                     t_pexArr[branch] = max(0.0, numArr[branch] / self.jerk)
@@ -178,11 +178,11 @@ class PathSegment:
                     t_pexArr[branch] = t_pex_zeroj
         for branch in range(2):
             t_branch = t_pexArr[branch]
-            vel_branch = self.vel + (t_branch/2)*(self.accel + (t_branch/3)*self.jerk)
-            pexArr[branch] = self.pos + t_branch*vel_branch
+            vel_branch = self.velocity + (t_branch/2)*(self.acceleration + (t_branch/3)*self.jerk)
+            pexArr[branch] = self.position + t_branch*vel_branch
 
-        min_position = min(self.pos, end_pva.pos, pexArr[0], pexArr[1])
-        max_position = max(self.pos, end_pva.pos, pexArr[0], pexArr[1])
+        min_position = min(self.position, end_segment.position, pexArr[0], pexArr[1])
+        max_position = max(self.position, end_segment.position, pexArr[0], pexArr[1])
 
         return MotionLimits(min_position=min_position,
                             max_position=max_position,
@@ -205,15 +205,15 @@ class PathSegment:
         dt = tai - self.tai
         return PathSegment(
             tai=tai,
-            pos=self.pos + dt*(self.vel + dt*(0.5*self.accel + dt*self.jerk/6.0)),
-            vel=self.vel + dt*(self.accel + dt*(0.5*self.jerk)),
-            accel=self.accel + dt*self.jerk,
+            position=self.position + dt*(self.velocity + dt*(0.5*self.acceleration + dt*self.jerk/6.0)),
+            velocity=self.velocity + dt*(self.acceleration + dt*(0.5*self.jerk)),
+            acceleration=self.acceleration + dt*self.jerk,
             jerk=self.jerk,
         )
 
     def __repr__(self):
         fields = [f"tai={self.tai}"]
-        for name in ("pos", "vel", "accel", "jerk"):
+        for name in ("position", "velocity", "acceleration", "jerk"):
             val = getattr(self, name)
             if val != 0:
                 fields.append(f"{name}={val}")

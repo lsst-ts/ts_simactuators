@@ -89,15 +89,15 @@ class TrackingActuator:
         if tai is None:
             tai = salobj.current_tai()
         if min_position <= 0 and 0 < max_position:
-            pos = 0
+            position = 0
         else:
-            pos = min_position
-        self.target = path.PathSegment(tai=tai, pos=pos)
-        self.current = path.Path(path.PathSegment(tai=tai, pos=pos),
+            position = min_position
+        self.target = path.PathSegment(tai=tai, position=position)
+        self.current = path.Path(path.PathSegment(tai=tai, position=position),
                                  kind=self.Kind.Stopped)
         self._ntrack = 0
 
-    def set_target(self, tai, pos, vel):
+    def set_target(self, tai, position, velocity):
         """Set the target position, velocity and time.
 
         The actuator will track, if possible, else slew to match the specified
@@ -107,9 +107,9 @@ class TrackingActuator:
         ----------
         tai : `float`
             TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
-        pos : `float`
+        position : `float`
             Position (deg)
-        vel : `float`
+        velocity : `float`
             Velocity (deg/sec)
 
         Raises
@@ -139,26 +139,30 @@ class TrackingActuator:
             prev_segment = self.current.at(prev_tai)
             tracking_segment = path.PathSegment.from_end_conditions(
                 start_tai=prev_tai,
-                start_position=prev_segment.pos,
-                start_velocity=prev_segment.vel,
+                start_position=prev_segment.position,
+                start_velocity=prev_segment.velocity,
                 end_tai=tai,
-                end_position=pos,
-                end_velocity=vel)
+                end_position=position,
+                end_velocity=velocity)
             limits = tracking_segment.limits(tai)
             if limits.max_velocity <= self.max_velocity and limits.max_acceleration <= self.max_acceleration \
                     and limits.min_position >= self.min_position and limits.max_position <= self.max_position:
                 # Tracking works.
                 newcurr = path.Path(tracking_segment,
-                                    path.PathSegment(tai=tai, pos=pos, vel=vel),
+                                    path.PathSegment(tai=tai, position=position, velocity=velocity),
                                     kind=self.Kind.Tracking)
 
         if newcurr is None:
             # Tracking didn't work, so slew.
             curr_segment = self.current.at(tai)
-            newcurr = path.slew(tai=tai, start_position=curr_segment.pos, start_velocity=curr_segment.vel,
-                                end_position=pos, end_velocity=vel,
-                                max_velocity=self.max_velocity, max_acceleration=self.max_acceleration)
-        self.target = path.PathSegment(tai=tai, pos=pos, vel=vel)
+            newcurr = path.slew(tai=tai,
+                                start_position=curr_segment.position,
+                                start_velocity=curr_segment.velocity,
+                                end_position=position,
+                                end_velocity=velocity,
+                                max_velocity=self.max_velocity,
+                                max_acceleration=self.max_acceleration)
+        self.target = path.PathSegment(tai=tai, position=position, velocity=velocity)
         self.current = newcurr
 
     @property
@@ -190,11 +194,11 @@ class TrackingActuator:
         if tai is None:
             tai = salobj.current_tai()
         curr_segment = self.current.at(tai)
-        self.current = path.stop(pos=curr_segment.pos, vel=curr_segment.vel, tai=tai,
+        self.current = path.stop(position=curr_segment.position, velocity=curr_segment.velocity, tai=tai,
                                  max_acceleration=self.max_acceleration)
         self.target = self.current[-1]
 
-    def abort(self, tai=None, pos=None):
+    def abort(self, tai=None, position=None):
         """Stop motion immediately, with infinite acceleration.
 
         Do not change the commanded position.
@@ -206,15 +210,15 @@ class TrackingActuator:
             (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
-        pos : `float` (optional)
+        position : `float` (optional)
             Position at which to stop (deg); if `None` then stop at position
             at time ``tai``.
         """
         if tai is None:
             tai = salobj.current_tai()
-        if pos is None:
-            pos = self.current.at(tai).pos
-        self.current = path.Path(path.PathSegment(tai=tai, pos=pos), kind=self.Kind.Stopped)
+        if position is None:
+            position = self.current.at(tai).position
+        self.current = path.Path(path.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped)
 
     def kind(self, tai=None):
         """Kind of path at the specified time.

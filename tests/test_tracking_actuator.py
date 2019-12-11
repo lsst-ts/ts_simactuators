@@ -31,8 +31,8 @@ from lsst.ts import simactuators
 class SinFunctor:
     """Functor to compute sine wave position and associated velocity
 
-    pos = pos_off + vel_off*(tai-start_tai) + pos_ampl*sin(theta)
-    vel = vel_off + vel_amp*sin(theta)
+    position = pos_off + vel_off*(tai-start_tai) + pos_ampl*sin(theta)
+    velocity = vel_off + vel_amp*sin(theta)
     where theta = 2 pi (tai-start_tai) / period
     and vel_ampl = 2 pi ampl / period
     """
@@ -46,7 +46,7 @@ class SinFunctor:
         self.vel_ampl = self.pos_ampl * 2 * math.pi / self.period
 
     def __call__(self, tai):
-        """Compute pos, vel at the specified time."""
+        """Compute position, velocity at the specified time."""
         dt = tai - self.start_tai
         theta = 2*math.pi*dt/self.period
         return (
@@ -77,19 +77,20 @@ class TestTrackingActuator(unittest.TestCase):
         self.assertEqual(actuator.dtmax_track, dtmax_track)
         self.assertEqual(actuator.nsettle, nsettle)
         self.assertEqual(actuator.target.tai, tai)
-        self.assertEqual(actuator.target.pos, 0)
-        self.assertEqual(actuator.target.vel, 0)
-        self.assertEqual(actuator.target.accel, 0)
+        self.assertEqual(actuator.target.position, 0)
+        self.assertEqual(actuator.target.velocity, 0)
+        self.assertEqual(actuator.target.acceleration, 0)
         self.assertEqual(actuator.target.jerk, 0)
         self.assertEqual(actuator.current[0].tai, tai)
-        self.assertEqual(actuator.current[0].pos, 0)
-        self.assertEqual(actuator.current[0].vel, 0)
-        self.assertEqual(actuator.current[0].accel, 0)
+        self.assertEqual(actuator.current[0].position, 0)
+        self.assertEqual(actuator.current[0].velocity, 0)
+        self.assertEqual(actuator.current[0].acceleration, 0)
         self.assertEqual(actuator.current[0].jerk, 0)
         self.assertEqual(len(actuator.current), 1)
         self.assertEqual(actuator.current.kind, actuator.Kind.Stopped)
 
-        # pos is 0 if in range [min_position, max_position) else min_position
+        # position is 0 if in range [min_position, max_position),
+        # else min_position
         for min_position, max_position in itertools.product(
             (-10, 0, 10),
             (-9, -1, 9),
@@ -108,8 +109,8 @@ class TestTrackingActuator(unittest.TestCase):
                 dtmax_track=dtmax_track,
                 nsettle=nsettle,
                 tai=tai)
-            self.assertAlmostEqual(actuator.current[-1].pos, expected_p0)
-            self.assertAlmostEqual(actuator.target.pos, expected_p0)
+            self.assertAlmostEqual(actuator.current[-1].position, expected_p0)
+            self.assertAlmostEqual(actuator.target.position, expected_p0)
 
     def test_constructor_errors(self):
         min_position = -1
@@ -268,28 +269,28 @@ class TestTrackingActuator(unittest.TestCase):
                 for i in range(5):
                     tai = i*cmd_interval + 1  # +1 to avoid 0
                     cmd_pos = pos_off + tai*vel_off
-                    actuator.set_target(pos=cmd_pos, vel=vel_off, tai=tai)
+                    actuator.set_target(position=cmd_pos, velocity=vel_off, tai=tai)
                 self.assertEqual(actuator.kind(tai), actuator.Kind.Slewing)
 
                 # expected starting position and velocity for the halt
                 tai_start_halt = tai + cmd_interval
-                pva_before_stop = actuator.current.at(tai_start_halt)
+                segment_before_stop = actuator.current.at(tai_start_halt)
                 actuator.stop(tai=tai_start_halt)
                 self.assertEqual(actuator.kind(tai_start_halt), actuator.Kind.Stopping)
-                pva_start_halt = actuator.current.at(tai_start_halt)
-                self.assertAlmostEqual(pva_before_stop.pos, pva_start_halt.pos)
-                self.assertAlmostEqual(pva_before_stop.vel, pva_start_halt.vel)
+                segment_start_halt = actuator.current.at(tai_start_halt)
+                self.assertAlmostEqual(segment_before_stop.position, segment_start_halt.position)
+                self.assertAlmostEqual(segment_before_stop.velocity, segment_start_halt.velocity)
 
                 # the ending velocity and acceleration are, of course, 0
                 # and the current and target positions should match at the end
                 tai_end_halt = actuator.current[-1].tai
-                pva_end_halt = actuator.current.at(tai_end_halt)
-                self.assertEqual(pva_end_halt.vel, 0)
-                self.assertEqual(pva_end_halt.accel, 0)
-                cmd_pva_end_halt = actuator.target.at(tai=tai_end_halt)
-                self.assertAlmostEqual(cmd_pva_end_halt.pos, pva_end_halt.pos)
-                self.assertEqual(cmd_pva_end_halt.vel, 0)
-                self.assertEqual(cmd_pva_end_halt.accel, 0)
+                segment_end_halt = actuator.current.at(tai_end_halt)
+                self.assertEqual(segment_end_halt.velocity, 0)
+                self.assertEqual(segment_end_halt.acceleration, 0)
+                cmd_segment_end_halt = actuator.target.at(tai=tai_end_halt)
+                self.assertAlmostEqual(cmd_segment_end_halt.position, segment_end_halt.position)
+                self.assertEqual(cmd_segment_end_halt.velocity, 0)
+                self.assertEqual(cmd_segment_end_halt.acceleration, 0)
                 self.assertGreater(tai_end_halt, tai_start_halt)
                 # the end kind should be Stopped;
                 # add a margin to the time  to avoid roundoff error
@@ -314,24 +315,24 @@ class TestTrackingActuator(unittest.TestCase):
                 for i in range(5):
                     tai = i*cmd_interval + 1  # +1 to avoid 0
                     cmd_pos = pos_off + tai*vel_off
-                    actuator.set_target(pos=cmd_pos, vel=vel_off, tai=tai)
+                    actuator.set_target(position=cmd_pos, velocity=vel_off, tai=tai)
                 self.assertEqual(actuator.kind(tai), actuator.Kind.Slewing)
 
                 # expected starting position and velocity for the halt
                 t_abort = tai + cmd_interval
-                pva_before_abort = actuator.current.at(t_abort)
+                segment_before_abort = actuator.current.at(t_abort)
                 actuator.abort(tai=t_abort)
                 self.assertEqual(actuator.kind(t_abort), actuator.Kind.Stopped)
-                pva_abort = actuator.current.at(t_abort)
-                self.assertAlmostEqual(pva_before_abort.pos, pva_abort.pos)
-                self.assertAlmostEqual(pva_abort.vel, 0)
+                segment_abort = actuator.current.at(t_abort)
+                self.assertAlmostEqual(segment_before_abort.position, segment_abort.position)
+                self.assertAlmostEqual(segment_abort.velocity, 0)
                 self.assertEqual(len(actuator.current), 1)
 
                 # abort does not change actuator.target
-                cmd_pva_abort = actuator.target.at(t_abort)
+                cmd_segment_abort = actuator.target.at(t_abort)
                 desired_cmd_pos = pos_off + t_abort*vel_off
-                self.assertAlmostEqual(cmd_pva_abort.pos, desired_cmd_pos)
-                self.assertAlmostEqual(cmd_pva_abort.vel, vel_off)
+                self.assertAlmostEqual(cmd_segment_abort.position, desired_cmd_pos)
+                self.assertAlmostEqual(cmd_segment_abort.velocity, vel_off)
 
     def check_sin_path(self, pos_off, pos_ampl, vel_off, period, frac_phase, cmd_interval,
                        min_position, max_position, max_velocity, max_acceleration, nsettle, max_nslew,
@@ -390,16 +391,16 @@ class TestTrackingActuator(unittest.TestCase):
             period=period,
             start_tai=frac_phase*period,
         )
-        pos, vel = sinfunc(0)
+        position, velocity = sinfunc(0)
         actuator = simactuators.TrackingActuator(
             min_position=min_position, max_position=max_position,
             max_velocity=max_velocity, max_acceleration=max_acceleration,
             dtmax_track=dtmax_track, nsettle=nsettle,
             tai=-cmd_interval)  # so we can start with tracking, of possible
         self.assertEqual(len(actuator.current), 1)
-        actuator.current[0].pos = pos - pos_off
-        actuator.current[0].vel = vel - vel_off
-        self.assertEqual(actuator.current[0].accel, 0)
+        actuator.current[0].position = position - pos_off
+        actuator.current[0].velocity = velocity - vel_off
+        self.assertEqual(actuator.current[0].acceleration, 0)
         self.assertEqual(actuator.current.kind, actuator.Kind.Stopped)
         actuator.current[0].tai = 0
         pos_errors = []
@@ -411,8 +412,8 @@ class TestTrackingActuator(unittest.TestCase):
         ntrack = 0
 
         for cmd_t in np.linspace(start=0, stop=period, num=ncmd):
-            pos, vel = sinfunc(cmd_t)
-            actuator.set_target(pos=pos, vel=vel, tai=cmd_t)
+            position, velocity = sinfunc(cmd_t)
+            actuator.set_target(position=position, velocity=velocity, tai=cmd_t)
 
             # Check that actuator.kind(tai) transitions
             # from Slewing to Tracking after nsettle instances of
@@ -430,22 +431,22 @@ class TestTrackingActuator(unittest.TestCase):
                     self.fail(f"Slew found after tracking: nslew={nslew}; ntrack={ntrack}")
 
             # check that the commanded PVT was properly recorded
-            cmd_pva = actuator.target.at(cmd_t)
-            self.assertAlmostEqual(cmd_pva.pos, pos)
-            self.assertAlmostEqual(cmd_pva.vel, vel)
-            self.assertAlmostEqual(cmd_pva.accel, 0)
+            target_segment = actuator.target.at(cmd_t)
+            self.assertAlmostEqual(target_segment.position, position)
+            self.assertAlmostEqual(target_segment.velocity, velocity)
+            self.assertAlmostEqual(target_segment.acceleration, 0)
 
             # Check tracking error, once we have settled
             # (when actuator.kind(tai) says we are tracking)
             if actuator.kind(cmd_t) == actuator.Kind.Tracking:
                 for frac_dt in (-0.6, -0.3, 0, 0.3, 0.6):
                     test_t = cmd_interval*frac_dt + cmd_t
-                    cmd_pva = actuator.target.at(test_t)
-                    curr_pva = actuator.current.at(test_t)
-                    pos_errors.append(curr_pva.pos - cmd_pva.pos)
-                    vel_errors.append(curr_pva.vel - cmd_pva.vel)
-                    curr_vels.append(curr_pva.vel)
-                    curr_accels.append(curr_pva.accel)
+                    target_segment = actuator.target.at(test_t)
+                    current_segment = actuator.current.at(test_t)
+                    pos_errors.append(current_segment.position - target_segment.position)
+                    vel_errors.append(current_segment.velocity - target_segment.velocity)
+                    curr_vels.append(current_segment.velocity)
+                    curr_accels.append(current_segment.acceleration)
         pos_err = np.abs(pos_errors).max()
         vel_err = np.abs(vel_errors).max()
         max_velocity = np.abs(curr_vels).max()
@@ -455,7 +456,7 @@ class TestTrackingActuator(unittest.TestCase):
         self.assertLess(pos_err, max_position_err)
         self.assertLess(vel_err, max_velocity_err)
         self.assertLessEqual(max_velocity, max_velocity)
-        # use a fudge factor for accel because it will typically
+        # use a fudge factor for acceleration because it will typically
         # be at the limit
         self.assertLessEqual(max_acceleration, max_acceleration*1.000001)
 
