@@ -87,7 +87,7 @@ class PointToPointActuator:
             raise ValueError(f"position={position} not in range [{self.min_position}, {self.max_position}]")
         self._start_position = self.current_position
         self._end_position = position
-        dtime = abs(self.end_position - self.start_position) / self.speed
+        dtime = self._move_duration()
         self._end_time = time.monotonic() + dtime
 
     @property
@@ -132,3 +132,8 @@ class PointToPointActuator:
             return 0
 
         return rem_time
+
+    def _move_duration(self):
+        """Compute the total duration of a move, in seconds.
+        """
+        return abs(self.end_position - self.start_position) / self.speed
