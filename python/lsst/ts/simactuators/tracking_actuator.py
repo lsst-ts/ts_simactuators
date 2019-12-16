@@ -52,7 +52,7 @@ class TrackingActuator:
         before ``self.kind(tai)`` reports tracking instead of slewing.
     tai : `float` (optional)
         TAI time for ``self.target`` and ``self.path``
-        (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+        (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
 
@@ -106,7 +106,7 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
         position : `float`
             Position (deg)
         velocity : `float`
@@ -187,7 +187,7 @@ class TrackingActuator:
         ----------
         tai : `float` (optional)
             TAI time for ``self.target`` and ``self.path``
-            (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         """
@@ -209,7 +209,7 @@ class TrackingActuator:
         ----------
         tai : `float` (optional)
             TAI time for ``self.target`` and ``self.path``
-            (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         position : `float` (optional)
@@ -230,7 +230,7 @@ class TrackingActuator:
         ----------
         tai : `float` (optional)
             TAI time at which to evaluate the kind of path
-            (TAI unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+            (TAI unix seconds, e.g. from lsst.ts.salobj.current_tai()).
             If None then use current TAI.
             Ignored unless stopping.
 
