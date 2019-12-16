@@ -222,7 +222,7 @@ def slew(tai, start_position, start_velocity, end_position,
                                                  acceleration=start_accel))
         segment2 = segments[-1].at(dt1)
     else:
-        segment2 = path_segment.PathSegment(tai=segment2.tai,
+        segment2 = path_segment.PathSegment(tai=0,
                                             position=start_position,
                                             velocity=start_velocity)
     if dt2 > 0:
