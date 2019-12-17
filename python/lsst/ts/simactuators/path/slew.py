@@ -40,7 +40,7 @@ def slew(tai, start_position, start_velocity, end_position,
     Parameters
     ----------
     tai : `float`
-        TAI time (unix seconds, e.g. from lsst.ts.salobj.curr_tai()).
+        TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
     start_position : `float`
         Position of A at time ``tai`` (deg)
     start_velocity : `float`
@@ -94,7 +94,7 @@ def slew(tai, start_position, start_velocity, end_position,
     (each of the first 3 segments is present only if its duration is nonzero,
     and the last is absent if the final segment already has zero acceleration):
 
-        segment   vel        accel          duration
+        segment   velocity        acceleration          duration
            1      start_velocity  start_accel    dt1
            2      vel_mid    0              dt2
            3      vel_mid    end_accel      dt3
@@ -135,7 +135,7 @@ def slew(tai, start_position, start_velocity, end_position,
         sign_end_velocityA = math.copysign(1.0, end_velocityA)
         sign_dpBAi = sign_end_velocityA
     else:
-        return path.Path(path_segment.PathSegment(tai=tai, pos=start_position, vel=start_velocity),
+        return path.Path(path_segment.PathSegment(tai=tai, position=start_position, velocity=start_velocity),
                          kind=path.Kind.Slewing)
 
     # Compute start_accel and accel3
@@ -158,7 +158,7 @@ def slew(tai, start_position, start_velocity, end_position,
     elif max_acceleration*abs(dpBAi)*SLEW_FUDGE <= half_end_velocityAsq:
         start_accel = -sign_dpBAi * max_acceleration
 
-    # A type 4 slew requires reducing accel. to obtain a solution.
+    # A type 4 slew requires reducing acceleration. to obtain a solution.
     else:
         # The equation for start_accel is sure to give
         # |start_accel| < max_acceleration
@@ -217,28 +217,37 @@ def slew(tai, start_position, start_velocity, end_position,
     segments = []
     if dt1 > 0:
         # There is a segment 1 with acceleration start_accel
-        segments.append(path_segment.PathSegment(tai=0, pos=start_position,
-                                                 vel=start_velocity, accel=start_accel))
+        segments.append(path_segment.PathSegment(tai=0, position=start_position,
+                                                 velocity=start_velocity,
+                                                 acceleration=start_accel))
         segment2 = segments[-1].at(dt1)
     else:
-        segment2 = path_segment.PathSegment(tai=segment2.tai, pos=start_position, vel=start_velocity)
+        segment2 = path_segment.PathSegment(tai=0,
+                                            position=start_position,
+                                            velocity=start_velocity)
     if dt2 > 0:
         # There is a segment 2 with no acceleration
-        segments.append(path_segment.PathSegment(tai=segment2.tai, pos=segment2.pos, vel=segment2.vel))
+        segments.append(path_segment.PathSegment(tai=segment2.tai,
+                                                 position=segment2.position,
+                                                 velocity=segment2.velocity))
         segment3 = segments[-1].at(segment2.tai + dt2)
     else:
         segment3 = segment2
     if dt3 > 0:
         # There is a segment 3 with acceleration accel3
-        segments.append(path_segment.PathSegment(tai=segment3.tai, pos=segment3.pos,
-                                                 vel=segment3.vel, accel=accel3))
+        segments.append(path_segment.PathSegment(tai=segment3.tai,
+                                                 position=segment3.position,
+                                                 velocity=segment3.velocity,
+                                                 acceleration=accel3))
         segment4 = segments[-1].at(segment3.tai + dt3)
     else:
         segment4 = segment3
-    if segments[-1].accel != 0:
+    if segments[-1].acceleration != 0:
         # If the last PathSegment has non-zero acceleraton then append
         # a segment with zero acceleration.
-        segments.append(path_segment.PathSegment(tai=segment4.tai, pos=segment4.pos, vel=segment4.vel))
+        segments.append(path_segment.PathSegment(tai=segment4.tai,
+                                                 position=segment4.position,
+                                                 velocity=segment4.velocity))
     for segment in segments:
         segment.tai += tai
 

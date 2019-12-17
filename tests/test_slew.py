@@ -64,22 +64,22 @@ class TestSlew(unittest.TestCase):
         - The final position and velocity are correct.
         """
         self.assertAlmostEqual(path[0].tai, tai)
-        self.assertAlmostEqual(path[0].pos, start_position)
-        self.assertAlmostEqual(path[0].vel, start_velocity)
+        self.assertAlmostEqual(path[0].position, start_position)
+        self.assertAlmostEqual(path[0].velocity, start_velocity)
 
         for i in range(len(path) - 1):
             segment0 = path[i]
             segment1 = path[i+1]
             dt = segment1.tai - segment0.tai
             self.assertGreater(dt, 0)
-            pred_p1 = segment0.pos + dt*(segment0.vel + dt*0.5*segment0.accel)
-            pred_v1 = segment0.vel + dt*segment0.accel
-            self.assertAlmostEqual(segment1.pos, pred_p1, places=4)
-            self.assertAlmostEqual(segment1.vel, pred_v1, places=4)
+            pred_p1 = segment0.position + dt*(segment0.velocity + dt*0.5*segment0.acceleration)
+            pred_v1 = segment0.velocity + dt*segment0.acceleration
+            self.assertAlmostEqual(segment1.position, pred_p1, places=4)
+            self.assertAlmostEqual(segment1.velocity, pred_v1, places=4)
 
-        for tpvaj in path:
-            self.assertLessEqual(abs(tpvaj.vel), max_velocity)
-            self.assertLessEqual(abs(tpvaj.accel), max_acceleration)
+        for segment in path:
+            self.assertLessEqual(abs(segment.velocity), max_velocity)
+            self.assertLessEqual(abs(segment.acceleration), max_acceleration)
 
     def test_no_slew(self):
         """Test moving from a point to itself (no slew needed)."""
@@ -110,7 +110,7 @@ class TestSlew(unittest.TestCase):
                                 max_velocity=max_velocity,
                                 max_acceleration=max_acceleration)
                 self.assertEqual(len(path), 1)
-                self.assertAlmostEqual(path[0].accel, 0)
+                self.assertAlmostEqual(path[0].acceleration, 0)
 
     def test_long_fixed_points(self):
         """Test a fixed point to fixed point slew that is long enough
@@ -149,35 +149,35 @@ class TestSlew(unittest.TestCase):
 
                 self.assertEqual(len(path), 4)
                 self.assertAlmostEqual(path[0].tai, tai)
-                self.assertAlmostEqual(path[0].pos, start_position)
-                self.assertAlmostEqual(path[0].vel, 0)
-                self.assertAlmostEqual(path[0].accel, math.copysign(max_acceleration, dpos))
+                self.assertAlmostEqual(path[0].position, start_position)
+                self.assertAlmostEqual(path[0].velocity, 0)
+                self.assertAlmostEqual(path[0].acceleration, math.copysign(max_acceleration, dpos))
 
                 predicted_dt1 = dt_max_velocity
                 predicted_t1 = tai + predicted_dt1
                 predicted_dp1 = math.copysign(dp_max_velocity, dpos)
                 predicted_p1 = start_position + predicted_dp1
                 self.assertAlmostEqual(path[1].tai, predicted_t1, places=4)
-                self.assertAlmostEqual(path[1].pos, predicted_p1)
-                self.assertAlmostEqual(abs(path[1].vel), max_velocity)
-                self.assertAlmostEqual(path[1].accel, 0)
+                self.assertAlmostEqual(path[1].position, predicted_p1)
+                self.assertAlmostEqual(abs(path[1].velocity), max_velocity)
+                self.assertAlmostEqual(path[1].acceleration, 0)
 
                 predicted_abs_dp2 = abs(dpos) - 2*dp_max_velocity
                 predicted_dp2 = math.copysign(predicted_abs_dp2, dpos)
-                predicted_p2 = path[1].pos + predicted_dp2
+                predicted_p2 = path[1].position + predicted_dp2
                 predicted_dt2 = abs(predicted_dp2)/max_velocity
                 predicted_t2 = path[1].tai + predicted_dt2
                 self.assertAlmostEqual(path[2].tai, predicted_t2, places=4)
-                self.assertAlmostEqual(path[2].pos, predicted_p2)
-                self.assertAlmostEqual(abs(path[2].vel), max_velocity)
-                self.assertAlmostEqual(path[2].accel, -path[0].accel)
+                self.assertAlmostEqual(path[2].position, predicted_p2)
+                self.assertAlmostEqual(abs(path[2].velocity), max_velocity)
+                self.assertAlmostEqual(path[2].acceleration, -path[0].acceleration)
 
                 predicted_duration = 2*dt_max_velocity + predicted_dt2
                 predicted_t3 = tai + predicted_duration
                 self.assertAlmostEqual(path[3].tai, predicted_t3, places=4)
-                self.assertAlmostEqual(path[3].pos, end_position)
-                self.assertAlmostEqual(path[3].vel, 0)
-                self.assertAlmostEqual(path[3].accel, 0)
+                self.assertAlmostEqual(path[3].position, end_position)
+                self.assertAlmostEqual(path[3].velocity, 0)
+                self.assertAlmostEqual(path[3].acceleration, 0)
 
     def test_short_fixed_points(self):
         """Test a fixed point to fixed point slew that is long enough
@@ -215,24 +215,24 @@ class TestSlew(unittest.TestCase):
 
                 self.assertEqual(len(path), 3)
                 self.assertAlmostEqual(path[0].tai, tai)
-                self.assertAlmostEqual(path[0].pos, start_position)
-                self.assertAlmostEqual(path[0].vel, 0)
-                self.assertAlmostEqual(path[0].accel, math.copysign(max_acceleration, dpos))
+                self.assertAlmostEqual(path[0].position, start_position)
+                self.assertAlmostEqual(path[0].velocity, 0)
+                self.assertAlmostEqual(path[0].acceleration, math.copysign(max_acceleration, dpos))
 
                 predicted_dt1 = math.sqrt(abs(dpos)/max_acceleration)
                 predicted_t1 = tai + predicted_dt1
                 predicted_p1 = start_position + dpos/2
                 predicted_v1 = predicted_dt1*max_acceleration
                 self.assertAlmostEqual(path[1].tai, predicted_t1, places=4)
-                self.assertAlmostEqual(path[1].pos, predicted_p1)
-                self.assertAlmostEqual(abs(path[1].vel), predicted_v1)
-                self.assertAlmostEqual(path[1].accel, -path[0].accel)
+                self.assertAlmostEqual(path[1].position, predicted_p1)
+                self.assertAlmostEqual(abs(path[1].velocity), predicted_v1)
+                self.assertAlmostEqual(path[1].acceleration, -path[0].acceleration)
 
                 predicted_t2 = tai + 2*predicted_dt1
                 self.assertAlmostEqual(path[2].tai, predicted_t2, places=4)
-                self.assertAlmostEqual(path[2].pos, end_position)
-                self.assertAlmostEqual(path[2].vel, 0)
-                self.assertAlmostEqual(path[2].accel, 0)
+                self.assertAlmostEqual(path[2].position, end_position)
+                self.assertAlmostEqual(path[2].velocity, 0)
+                self.assertAlmostEqual(path[2].acceleration, 0)
 
     def test_other_slews(self):
         # Arbitrary but reasonable values

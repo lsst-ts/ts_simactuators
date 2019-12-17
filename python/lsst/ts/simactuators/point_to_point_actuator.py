@@ -34,7 +34,7 @@ class PointToPointActuator:
         Minimum allowed position.
     max_position : `float`
         Maximum allowed position.
-    pos : `float`
+    start_position : `float`
         Initial position.
     speed : `float`
         Speed of motion.
@@ -44,22 +44,22 @@ class PointToPointActuator:
     ValueError
         If ``speed <= 0``,
         ``min_position >= max_position``,
-        or ``pos`` not in range ``[min_position, max_position]``.
+        or ``start_position`` not in range ``[min_position, max_position]``.
     """
-    def __init__(self, min_position, max_position, pos, speed):
+    def __init__(self, min_position, max_position, start_position, speed):
         if speed <= 0:
             raise ValueError(f"speed={speed} must be positive")
         if min_position >= max_position:
             raise ValueError(f"min_position={min_position} must be < max_position={max_position}")
-        if not min_position <= pos <= max_position:
-            raise ValueError(f"pos={pos} must be in range "
+        if not min_position <= start_position <= max_position:
+            raise ValueError(f"start_position={start_position} must be in range "
                              f"[{min_position}, {max_position}]")
 
         self.min_position = min_position
         self.max_position = max_position
         self.speed = speed
-        self._start_position = pos
-        self._end_position = pos
+        self._start_position = start_position
+        self._end_position = start_position
         # End time of move, or 0 if not moving.
         self._end_time = 0
 
@@ -75,19 +75,19 @@ class PointToPointActuator:
         """
         return self._end_position
 
-    def set_position(self, pos):
+    def set_position(self, position):
         """Set a new desired position.
 
         Raises
         ------
         ValueError
-            If pos < self.min_position or > self.max_position.
+            If position < self.min_position or > self.max_position.
         """
-        if pos < self.min_position or pos > self.max_position:
-            raise ValueError(f"pos={pos} not in range [{self.min_position}, {self.max_position}]")
+        if position < self.min_position or position > self.max_position:
+            raise ValueError(f"position={position} not in range [{self.min_position}, {self.max_position}]")
         self._start_position = self.current_position
-        self._end_position = pos
-        dtime = abs(self.end_position - self.start_position) / self.speed
+        self._end_position = position
+        dtime = self._move_duration()
         self._end_time = time.monotonic() + dtime
 
     @property
@@ -132,3 +132,8 @@ class PointToPointActuator:
             return 0
 
         return rem_time
+
+    def _move_duration(self):
+        """Compute the total duration of a move, in seconds.
+        """
+        return abs(self.end_position - self.start_position) / self.speed
