@@ -28,6 +28,7 @@ import enum
 class Kind(enum.Enum):
     """Kind of path.
     """
+
     Stopped = enum.auto()
     Tracking = enum.auto()
     Slewing = enum.auto()
@@ -50,6 +51,7 @@ class Path:
         If no segments are supplied
         or the segments do not have increasing ``tai``.
     """
+
     def __init__(self, *segments, kind):
         if len(segments) < 1:
             raise ValueError(f"segments={segments} needs at least one element")

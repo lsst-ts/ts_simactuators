@@ -12,8 +12,10 @@ __version__ = "{version}"
 setup(
     name="ts_simactuators",
     description="Simulated actuators to simulation mode in Python CSCs.",
-    use_scm_version={"write_to": "python/lsst/ts/simactuators/version.py",
-                     "write_to_template": scm_version_template},
+    use_scm_version={
+        "write_to": "python/lsst/ts/simactuators/version.py",
+        "write_to_template": scm_version_template,
+    },
     setup_requires=["setuptools_scm", "pytest-runner"],
     install_requires=install_requires,
     package_dir={"": "python"},
@@ -27,5 +29,5 @@ setup(
     project_urls={
         "Bug Tracker": "https://jira.lsstcorp.org/secure/Dashboard.jspa",
         "Source Code": "https://github.com/lsst-ts/ts_simactuators",
-    }
+    },
 )

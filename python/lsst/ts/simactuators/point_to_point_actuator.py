@@ -46,14 +46,19 @@ class PointToPointActuator:
         ``min_position >= max_position``,
         or ``start_position`` not in range ``[min_position, max_position]``.
     """
+
     def __init__(self, min_position, max_position, start_position, speed):
         if speed <= 0:
             raise ValueError(f"speed={speed} must be positive")
         if min_position >= max_position:
-            raise ValueError(f"min_position={min_position} must be < max_position={max_position}")
+            raise ValueError(
+                f"min_position={min_position} must be < max_position={max_position}"
+            )
         if not min_position <= start_position <= max_position:
-            raise ValueError(f"start_position={start_position} must be in range "
-                             f"[{min_position}, {max_position}]")
+            raise ValueError(
+                f"start_position={start_position} must be in range "
+                f"[{min_position}, {max_position}]"
+            )
 
         self.min_position = min_position
         self.max_position = max_position
@@ -84,7 +89,9 @@ class PointToPointActuator:
             If position < self.min_position or > self.max_position.
         """
         if position < self.min_position or position > self.max_position:
-            raise ValueError(f"position={position} not in range [{self.min_position}, {self.max_position}]")
+            raise ValueError(
+                f"position={position} not in range [{self.min_position}, {self.max_position}]"
+            )
         self._start_position = self.current_position
         self._end_position = position
         dtime = self._move_duration()
@@ -98,7 +105,7 @@ class PointToPointActuator:
         if rem_time == 0:
             return self.end_position
         else:
-            return self.end_position - self.direction*self.speed*rem_time
+            return self.end_position - self.direction * self.speed * rem_time
 
     @property
     def direction(self):

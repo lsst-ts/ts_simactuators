@@ -57,19 +57,23 @@ def stop(tai, position, velocity, max_acceleration):
         raise ValueError(f"max_acceleration={max_acceleration} < 0")
 
     if velocity == 0:
-        return path.Path(path_segment.PathSegment(tai=tai, position=position),
-                         kind=path.Kind.Stopped)
+        return path.Path(
+            path_segment.PathSegment(tai=tai, position=position), kind=path.Kind.Stopped
+        )
 
     segments = []
     # tai is large enough that small time changes
     # have poor accuracy, so to improve accuracy
     # compute the path segments using tai = 0
     # then offset all the times before returning the path
-    dt = abs(velocity)/max_acceleration
+    dt = abs(velocity) / max_acceleration
     acceleration = -math.copysign(max_acceleration, velocity)
-    p1 = position + dt*(velocity + dt*0.5*acceleration)
-    segments.append(path_segment.PathSegment(tai=0, position=position,
-                                             velocity=velocity, acceleration=acceleration))
+    p1 = position + dt * (velocity + dt * 0.5 * acceleration)
+    segments.append(
+        path_segment.PathSegment(
+            tai=0, position=position, velocity=velocity, acceleration=acceleration
+        )
+    )
     segments.append(path_segment.PathSegment(tai=dt, position=p1, velocity=0))
 
     for segment in segments:
