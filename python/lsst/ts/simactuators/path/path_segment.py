@@ -39,6 +39,7 @@ class MotionLimits:
     max_acceleration : `float`
         Maximum absolute value of acceleration (deg/sec/sec)
     """
+
     def __init__(self, min_position, max_position, max_velocity, max_acceleration):
         self.min_position = min_position
         self.max_position = max_position
@@ -62,6 +63,7 @@ class PathSegment:
     jerk : `float` (optional)
         Jerk (deg/sec^3)
     """
+
     def __init__(self, tai, position=0, velocity=0, acceleration=0, jerk=0):
         self.tai = float(tai)
         self.position = float(position)
@@ -70,8 +72,15 @@ class PathSegment:
         self.jerk = float(jerk)
 
     @classmethod
-    def from_end_conditions(cls, start_tai, start_position, start_velocity,
-                            end_tai, end_position, end_velocity):
+    def from_end_conditions(
+        cls,
+        start_tai,
+        start_position,
+        start_velocity,
+        end_tai,
+        end_position,
+        end_velocity,
+    ):
         """Create a path segment that connects two paths of constant
         velocity.
 
@@ -100,17 +109,21 @@ class PathSegment:
         dt = end_tai - start_tai
         # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
-            raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
+            raise ValueError(
+                f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}"
+            )
 
         mean_vel = (end_position - start_position) / dt
-        start_accel = (3*mean_vel - (2*start_velocity + end_velocity))*2/dt
-        jerk = (((start_velocity + end_velocity)/2) - mean_vel)*12/(dt*dt)
+        start_accel = (3 * mean_vel - (2 * start_velocity + end_velocity)) * 2 / dt
+        jerk = (((start_velocity + end_velocity) / 2) - mean_vel) * 12 / (dt * dt)
 
-        return cls(tai=start_tai,
-                   position=start_position,
-                   velocity=start_velocity,
-                   acceleration=start_accel,
-                   jerk=jerk)
+        return cls(
+            tai=start_tai,
+            position=start_position,
+            velocity=start_velocity,
+            acceleration=start_accel,
+            jerk=jerk,
+        )
 
     def limits(self, end_tai):
         """Compute the limits of motion between ``self.tai``
@@ -136,7 +149,9 @@ class PathSegment:
         dt = end_tai - self.tai
         # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
-            raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
+            raise ValueError(
+                f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}"
+            )
 
         # Compute maximum |velocity| (max_velocity); this may occur
         # at the endpoints or at time t_vex = -start_accel/jerk.
@@ -145,16 +160,16 @@ class PathSegment:
         end_segment = self.at(end_tai)
 
         if abs(self.acceleration) < abs(self.jerk * dt):
-            t_vex = max(-self.acceleration/self.jerk, 0.0)
+            t_vex = max(-self.acceleration / self.jerk, 0.0)
         else:
             t_vex = 0.0
-        vex = self.velocity + t_vex*(self.acceleration + (t_vex/2)*self.jerk)
+        vex = self.velocity + t_vex * (self.acceleration + (t_vex / 2) * self.jerk)
         max_velocity = max(abs(self.velocity), abs(end_segment.velocity), abs(vex))
         max_acceleration = max(abs(self.acceleration), abs(end_segment.acceleration))
 
-        t_pexArr = [0]*2
-        numArr = [0]*2
-        pexArr = [0]*2
+        t_pexArr = [0] * 2
+        numArr = [0] * 2
+        pexArr = [0] * 2
 
         # Compute the two times t_pexArr,
         # and positions pexArr = p(t_pexArr).
@@ -164,7 +179,9 @@ class PathSegment:
             t_pex_zeroj = max(-self.velocity / self.acceleration, 0.0)
         else:
             t_pex_zeroj = 0.0
-        sqrt_arg = (self.acceleration * self.acceleration) - (2.0 * self.velocity * self.jerk)
+        sqrt_arg = (self.acceleration * self.acceleration) - (
+            2.0 * self.velocity * self.jerk
+        )
         if sqrt_arg < 0.0:
             t_pexArr[0] = 0.0
             t_pexArr[1] = 0.0
@@ -179,16 +196,20 @@ class PathSegment:
                     t_pexArr[branch] = t_pex_zeroj
         for branch in range(2):
             t_branch = t_pexArr[branch]
-            vel_branch = self.velocity + (t_branch/2)*(self.acceleration + (t_branch/3)*self.jerk)
-            pexArr[branch] = self.position + t_branch*vel_branch
+            vel_branch = self.velocity + (t_branch / 2) * (
+                self.acceleration + (t_branch / 3) * self.jerk
+            )
+            pexArr[branch] = self.position + t_branch * vel_branch
 
         min_position = min(self.position, end_segment.position, pexArr[0], pexArr[1])
         max_position = max(self.position, end_segment.position, pexArr[0], pexArr[1])
 
-        return MotionLimits(min_position=min_position,
-                            max_position=max_position,
-                            max_velocity=max_velocity,
-                            max_acceleration=max_acceleration)
+        return MotionLimits(
+            min_position=min_position,
+            max_position=max_position,
+            max_velocity=max_velocity,
+            max_acceleration=max_acceleration,
+        )
 
     def at(self, tai):
         """Return a copy with the specified time.
@@ -206,9 +227,11 @@ class PathSegment:
         dt = tai - self.tai
         return PathSegment(
             tai=tai,
-            position=self.position + dt*(self.velocity + dt*(0.5*self.acceleration + dt*self.jerk/6.0)),
-            velocity=self.velocity + dt*(self.acceleration + dt*(0.5*self.jerk)),
-            acceleration=self.acceleration + dt*self.jerk,
+            position=self.position
+            + dt
+            * (self.velocity + dt * (0.5 * self.acceleration + dt * self.jerk / 6.0)),
+            velocity=self.velocity + dt * (self.acceleration + dt * (0.5 * self.jerk)),
+            acceleration=self.acceleration + dt * self.jerk,
             jerk=self.jerk,
         )
 
