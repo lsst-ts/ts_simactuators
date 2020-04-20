@@ -69,12 +69,23 @@ class TrackingActuator:
     * ``target``: target set by `set_target` (a `path.PathSegment`).
     * ``path``: actual actuator path (a `path.Path`).
     """
+
     Kind = path.Kind
 
-    def __init__(self, min_position, max_position, max_velocity, max_acceleration,
-                 dtmax_track, nsettle=2, tai=None):
+    def __init__(
+        self,
+        min_position,
+        max_position,
+        max_velocity,
+        max_acceleration,
+        dtmax_track,
+        nsettle=2,
+        tai=None,
+    ):
         if min_position >= max_position:
-            raise ValueError(f"min_position={min_position} must be < max_position={max_position}")
+            raise ValueError(
+                f"min_position={min_position} must be < max_position={max_position}"
+            )
         if max_velocity <= 0:
             raise ValueError(f"max_velocity={max_velocity} must be > 0")
         if max_acceleration <= 0:
@@ -93,8 +104,9 @@ class TrackingActuator:
         else:
             position = min_position
         self.target = path.PathSegment(tai=tai, position=position)
-        self.path = path.Path(path.PathSegment(tai=tai, position=position),
-                              kind=self.Kind.Stopped)
+        self.path = path.Path(
+            path.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped
+        )
         self._ntrack = 0
 
     def set_target(self, tai, position, velocity):
@@ -143,25 +155,34 @@ class TrackingActuator:
                 start_velocity=prev_segment.velocity,
                 end_tai=tai,
                 end_position=position,
-                end_velocity=velocity)
+                end_velocity=velocity,
+            )
             limits = tracking_segment.limits(tai)
-            if limits.max_velocity <= self.max_velocity and limits.max_acceleration <= self.max_acceleration \
-                    and limits.min_position >= self.min_position and limits.max_position <= self.max_position:
+            if (
+                limits.max_velocity <= self.max_velocity
+                and limits.max_acceleration <= self.max_acceleration
+                and limits.min_position >= self.min_position
+                and limits.max_position <= self.max_position
+            ):
                 # Tracking works.
-                newcurr = path.Path(tracking_segment,
-                                    path.PathSegment(tai=tai, position=position, velocity=velocity),
-                                    kind=self.Kind.Tracking)
+                newcurr = path.Path(
+                    tracking_segment,
+                    path.PathSegment(tai=tai, position=position, velocity=velocity),
+                    kind=self.Kind.Tracking,
+                )
 
         if newcurr is None:
             # Tracking didn't work, so slew.
             curr_segment = self.path.at(tai)
-            newcurr = path.slew(tai=tai,
-                                start_position=curr_segment.position,
-                                start_velocity=curr_segment.velocity,
-                                end_position=position,
-                                end_velocity=velocity,
-                                max_velocity=self.max_velocity,
-                                max_acceleration=self.max_acceleration)
+            newcurr = path.slew(
+                tai=tai,
+                start_position=curr_segment.position,
+                start_velocity=curr_segment.velocity,
+                end_position=position,
+                end_velocity=velocity,
+                max_velocity=self.max_velocity,
+                max_acceleration=self.max_acceleration,
+            )
         self.target = path.PathSegment(tai=tai, position=position, velocity=velocity)
         self.path = newcurr
 
@@ -194,10 +215,12 @@ class TrackingActuator:
         if tai is None:
             tai = salobj.current_tai()
         curr_segment = self.path.at(tai)
-        self.path = path.stop(tai=tai,
-                              position=curr_segment.position,
-                              velocity=curr_segment.velocity,
-                              max_acceleration=self.max_acceleration)
+        self.path = path.stop(
+            tai=tai,
+            position=curr_segment.position,
+            velocity=curr_segment.velocity,
+            max_acceleration=self.max_acceleration,
+        )
         self.target = self.path[-1]
 
     def abort(self, tai=None, position=None):
@@ -220,8 +243,9 @@ class TrackingActuator:
             tai = salobj.current_tai()
         if position is None:
             position = self.path.at(tai).position
-        self.path = path.Path(path.PathSegment(tai=tai, position=position),
-                              kind=self.Kind.Stopped)
+        self.path = path.Path(
+            path.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped
+        )
 
     def kind(self, tai=None):
         """Kind of path at the specified time.

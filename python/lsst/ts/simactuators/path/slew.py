@@ -32,8 +32,15 @@ SLEW_FUDGE = 1.05
 """Fudge factor to avoid borderline cases; should be a bit larger than 1"""
 
 
-def slew(tai, start_position, start_velocity, end_position,
-         end_velocity, max_velocity, max_acceleration):
+def slew(
+    tai,
+    start_position,
+    start_velocity,
+    end_position,
+    end_velocity,
+    max_velocity,
+    max_acceleration,
+):
     """Compute a trapezoidal slew from a start path of constant velocity
     to and end path of constant velocity.
 
@@ -109,13 +116,17 @@ def slew(tai, start_position, start_velocity, end_position,
     # * |end_velocity| SLEW_FUDGE > max_velocity,
     # * |start_velocity| SLEW_FUDGE > max_velocity
     #   (which can lead to dt1 < 0 for type 2 slews).
-    if abs(start_velocity) > max_velocity*SLEW_FUDGE:
-        raise ValueError("Telescope is moving too fast "
-                         f"(|{start_velocity:0.4f}| > {SLEW_FUDGE} * {max_velocity}).")
-    if abs(end_velocity)*SLEW_FUDGE > max_velocity:
-        raise ValueError("Target is moving too fast "
-                         f"(|{end_velocity:0.4f}| * {SLEW_FUDGE} > {max_velocity}; "
-                         "telescope cannot acquire it.")
+    if abs(start_velocity) > max_velocity * SLEW_FUDGE:
+        raise ValueError(
+            "Telescope is moving too fast "
+            f"(|{start_velocity:0.4f}| > {SLEW_FUDGE} * {max_velocity})."
+        )
+    if abs(end_velocity) * SLEW_FUDGE > max_velocity:
+        raise ValueError(
+            "Target is moving too fast "
+            f"(|{end_velocity:0.4f}| * {SLEW_FUDGE} > {max_velocity}; "
+            "telescope cannot acquire it."
+        )
 
     # Compute end_velocityA, half_end_velocityAsq, sign_dpBAi,
     # and sign_end_velocityA, and handle null slews
@@ -124,7 +135,7 @@ def slew(tai, start_position, start_velocity, end_position,
     # "B" refers to the end path, and "dp" is a change in position.
     dpBAi = end_position - start_position
     end_velocityA = end_velocity - start_velocity
-    half_end_velocityAsq = 0.5*end_velocityA*end_velocityA
+    half_end_velocityAsq = 0.5 * end_velocityA * end_velocityA
     if dpBAi != 0.0 and end_velocityA != 0.0:
         sign_dpBAi = math.copysign(1.0, dpBAi)
         sign_end_velocityA = math.copysign(1.0, end_velocityA)
@@ -135,8 +146,12 @@ def slew(tai, start_position, start_velocity, end_position,
         sign_end_velocityA = math.copysign(1.0, end_velocityA)
         sign_dpBAi = sign_end_velocityA
     else:
-        return path.Path(path_segment.PathSegment(tai=tai, position=start_position, velocity=start_velocity),
-                         kind=path.Kind.Slewing)
+        return path.Path(
+            path_segment.PathSegment(
+                tai=tai, position=start_position, velocity=start_velocity
+            ),
+            kind=path.Kind.Slewing,
+        )
 
     # Compute start_accel and accel3
     # if sign(dpBAi) = sign(end_velocityA), slew is type 1
@@ -150,12 +165,13 @@ def slew(tai, start_position, start_velocity, end_position,
     # the biggest dt2 occurs at largest |a|, |a| = max_acceleration,
     # and smallest |vPB|, |vPB| = |end_velocityA|
     # so test at that point to see if solutions exist with dt2 > 0
-    elif abs(start_velocity) * SLEW_FUDGE < max_velocity and \
-            0 <= (max_acceleration*abs(dpBAi) - half_end_velocityAsq):
+    elif abs(start_velocity) * SLEW_FUDGE < max_velocity and 0 <= (
+        max_acceleration * abs(dpBAi) - half_end_velocityAsq
+    ):
         start_accel = sign_dpBAi * max_acceleration
 
     # A type 3 slew only exists if max_acceleration is small enough.
-    elif max_acceleration*abs(dpBAi)*SLEW_FUDGE <= half_end_velocityAsq:
+    elif max_acceleration * abs(dpBAi) * SLEW_FUDGE <= half_end_velocityAsq:
         start_accel = -sign_dpBAi * max_acceleration
 
     # A type 4 slew requires reducing acceleration. to obtain a solution.
@@ -164,7 +180,7 @@ def slew(tai, start_position, start_velocity, end_position,
         # |start_accel| < max_acceleration
         # (otherwise the slew would have been type 3),
         # so this equation is guranteed to not overflow.
-        start_accel = -half_end_velocityAsq / (SLEW_FUDGE*dpBAi)
+        start_accel = -half_end_velocityAsq / (SLEW_FUDGE * dpBAi)
     accel3 = -start_accel
 
     # Make sure velocity / acceleration divisions will not overflow. This is
@@ -172,7 +188,7 @@ def slew(tai, start_position, start_velocity, end_position,
     # but it can also catch stupid max_acceleration or max_velocity inputs.
     # Note that sys.float_info.max is intended to be a tiny delta-time.
     max_vdiff = max_velocity + abs(start_velocity) + abs(end_velocity)
-    if max_vdiff >= min(abs(start_accel), 1.0)*sys.float_info.max:
+    if max_vdiff >= min(abs(start_accel), 1.0) * sys.float_info.max:
         raise RuntimeError("Computed slew time is ridiculous.")
 
     # Compute dt2 and vel_mid
@@ -180,10 +196,12 @@ def slew(tai, start_position, start_velocity, end_position,
     # if resulting vel_mid is too big, reduce it to maximum allowed
     # and compute corresponding increased dt2.
     dt2 = 0
-    vPB_temp = (0.5*start_accel*dt2)**2 + half_end_velocityAsq + start_accel*dpBAi
+    vPB_temp = (
+        (0.5 * start_accel * dt2) ** 2 + half_end_velocityAsq + start_accel * dpBAi
+    )
     if vPB_temp < 0.0:
         raise RuntimeError("Bug! Tried to compute square root of negative value.")
-    vPB = math.copysign(math.sqrt(vPB_temp), start_accel) - 0.5*start_accel*dt2
+    vPB = math.copysign(math.sqrt(vPB_temp), start_accel) - 0.5 * start_accel * dt2
     vel_mid = vPB + end_velocity
     if abs(vel_mid) > max_velocity:
         # |vel_mid| is too big, and so must be reduced.
@@ -194,13 +212,13 @@ def slew(tai, start_position, start_velocity, end_position,
         # Thus dt2 may be computed without overflow.
         vel_mid = math.copysign(max_velocity, vel_mid)
         vPB = vel_mid - end_velocity
-        dt2 = (dpBAi + ((half_end_velocityAsq - vPB*vPB)/start_accel)) / vPB
+        dt2 = (dpBAi + ((half_end_velocityAsq - vPB * vPB) / start_accel)) / vPB
 
     # Compute dt1 and dt3. Note that the following divisions
     # were proved safe from overflow above.
     vPA = vPB + end_velocityA
-    dt1 = vPA/start_accel
-    dt3 = -vPB/accel3
+    dt1 = vPA / start_accel
+    dt3 = -vPB / accel3
 
     # Perform sanity checks.
     if dt1 < 0.0 or dt2 < 0.0 or dt3 < 0.0:
@@ -217,37 +235,50 @@ def slew(tai, start_position, start_velocity, end_position,
     segments = []
     if dt1 > 0:
         # There is a segment 1 with acceleration start_accel
-        segments.append(path_segment.PathSegment(tai=0, position=start_position,
-                                                 velocity=start_velocity,
-                                                 acceleration=start_accel))
+        segments.append(
+            path_segment.PathSegment(
+                tai=0,
+                position=start_position,
+                velocity=start_velocity,
+                acceleration=start_accel,
+            )
+        )
         segment2 = segments[-1].at(dt1)
     else:
-        segment2 = path_segment.PathSegment(tai=0,
-                                            position=start_position,
-                                            velocity=start_velocity)
+        segment2 = path_segment.PathSegment(
+            tai=0, position=start_position, velocity=start_velocity
+        )
     if dt2 > 0:
         # There is a segment 2 with no acceleration
-        segments.append(path_segment.PathSegment(tai=segment2.tai,
-                                                 position=segment2.position,
-                                                 velocity=segment2.velocity))
+        segments.append(
+            path_segment.PathSegment(
+                tai=segment2.tai, position=segment2.position, velocity=segment2.velocity
+            )
+        )
         segment3 = segments[-1].at(segment2.tai + dt2)
     else:
         segment3 = segment2
     if dt3 > 0:
         # There is a segment 3 with acceleration accel3
-        segments.append(path_segment.PathSegment(tai=segment3.tai,
-                                                 position=segment3.position,
-                                                 velocity=segment3.velocity,
-                                                 acceleration=accel3))
+        segments.append(
+            path_segment.PathSegment(
+                tai=segment3.tai,
+                position=segment3.position,
+                velocity=segment3.velocity,
+                acceleration=accel3,
+            )
+        )
         segment4 = segments[-1].at(segment3.tai + dt3)
     else:
         segment4 = segment3
     if segments[-1].acceleration != 0:
         # If the last PathSegment has non-zero acceleraton then append
         # a segment with zero acceleration.
-        segments.append(path_segment.PathSegment(tai=segment4.tai,
-                                                 position=segment4.position,
-                                                 velocity=segment4.velocity))
+        segments.append(
+            path_segment.PathSegment(
+                tai=segment4.tai, position=segment4.position, velocity=segment4.velocity
+            )
+        )
     for segment in segments:
         segment.tai += tai
 

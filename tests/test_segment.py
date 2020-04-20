@@ -30,7 +30,9 @@ from lsst.ts import simactuators
 
 
 class TestPathSegment(unittest.TestCase):
-    def check_from_end_conditions(self, start_position, start_velocity, end_position, end_velocity, dt):
+    def check_from_end_conditions(
+        self, start_position, start_velocity, end_position, end_velocity, dt
+    ):
         """Check PathSegment from_end_conditions and limits methods.
         """
         start_tai = 45.3  # any value will do
@@ -41,7 +43,8 @@ class TestPathSegment(unittest.TestCase):
             start_velocity=start_velocity,
             end_tai=end_tai,
             end_position=end_position,
-            end_velocity=end_velocity)
+            end_velocity=end_velocity,
+        )
         self.assertAlmostEqual(segment.tai, start_tai)
         self.assertAlmostEqual(segment.position, start_position)
         self.assertAlmostEqual(segment.velocity, start_velocity)
@@ -51,8 +54,10 @@ class TestPathSegment(unittest.TestCase):
         self.assertAlmostEqual(end_segment.velocity, end_velocity)
         start_accel = segment.acceleration
         jerk = segment.jerk
-        desired_end_position = start_position + dt*(start_velocity + dt*(0.5*start_accel + dt*(1/6)*jerk))
-        desired_end_velocity = start_velocity + dt*(start_accel + dt*0.5*jerk)
+        desired_end_position = start_position + dt * (
+            start_velocity + dt * (0.5 * start_accel + dt * (1 / 6) * jerk)
+        )
+        desired_end_velocity = start_velocity + dt * (start_accel + dt * 0.5 * jerk)
         self.assertAlmostEqual(end_segment.position, desired_end_position)
         self.assertAlmostEqual(end_segment.velocity, desired_end_velocity)
 
@@ -61,12 +66,14 @@ class TestPathSegment(unittest.TestCase):
         desired_max_position = max(start_position, end_position)
         desired_max_velocity = max(abs(start_velocity), abs(end_velocity))
         for t in np.linspace(start=0, stop=dt, num=100):
-            pt = start_position + t*(start_velocity + t*(0.5*start_accel + t*jerk/6))
-            vt = start_velocity + t*(start_accel + t*0.5*jerk)
+            pt = start_position + t * (
+                start_velocity + t * (0.5 * start_accel + t * jerk / 6)
+            )
+            vt = start_velocity + t * (start_accel + t * 0.5 * jerk)
             desired_min_position = min(pt, desired_min_position)
             desired_max_position = max(pt, desired_max_position)
             desired_max_velocity = max(abs(vt), desired_max_velocity)
-        aB = start_accel + dt*jerk
+        aB = start_accel + dt * jerk
         desired_max_acceleration = max(abs(start_accel), abs(aB))
 
         limits = segment.limits(end_tai)
@@ -76,23 +83,29 @@ class TestPathSegment(unittest.TestCase):
         self.assertAlmostEqual(limits.max_acceleration, desired_max_acceleration)
 
     def test_from_end_conditions(self):
-        for start_position, start_velocity, end_position, end_velocity, dt in itertools.product(
-            (0, -0.5, 0.2),
-            (0, -0.2, 0.1),
-            (0, 0.3, -0.6),
-            (0, 0.3, -0.2),
-            (1, 5),
+        for (
+            start_position,
+            start_velocity,
+            end_position,
+            end_velocity,
+            dt,
+        ) in itertools.product(
+            (0, -0.5, 0.2), (0, -0.2, 0.1), (0, 0.3, -0.6), (0, 0.3, -0.2), (1, 5),
         ):
-            with self.subTest(start_position=start_position,
-                              start_velocity=start_velocity,
-                              end_position=end_position,
-                              end_velocity=end_velocity,
-                              dt=dt):
-                self.check_from_end_conditions(dt=dt,
-                                               start_position=start_position,
-                                               start_velocity=start_velocity,
-                                               end_position=end_position,
-                                               end_velocity=end_velocity)
+            with self.subTest(
+                start_position=start_position,
+                start_velocity=start_velocity,
+                end_position=end_position,
+                end_velocity=end_velocity,
+                dt=dt,
+            ):
+                self.check_from_end_conditions(
+                    dt=dt,
+                    start_position=start_position,
+                    start_velocity=start_velocity,
+                    end_position=end_position,
+                    end_velocity=end_velocity,
+                )
 
     def test_basics(self):
         tai = 1573847242.4
@@ -100,11 +113,13 @@ class TestPathSegment(unittest.TestCase):
         velocity = 4.3
         acceleration = 0.23
         jerk = 0.05
-        segment = simactuators.path.PathSegment(tai=tai,
-                                                position=position,
-                                                velocity=velocity,
-                                                acceleration=acceleration,
-                                                jerk=jerk)
+        segment = simactuators.path.PathSegment(
+            tai=tai,
+            position=position,
+            velocity=velocity,
+            acceleration=acceleration,
+            jerk=jerk,
+        )
         self.assertEqual(segment.tai, tai)
         self.assertEqual(segment.position, position)
         self.assertEqual(segment.velocity, velocity)
@@ -127,9 +142,14 @@ class TestPathSegment(unittest.TestCase):
                 # `PathSegment` (to avoid an exact copy),
                 # so the computed values will be slightly different,
                 # especially position and to a lessar extent velocity.
-                expected_pos = position + velocity*dt + acceleration*dt*dt/2 + jerk*dt*dt*dt/6
-                expected_vel = velocity + acceleration*dt + jerk*dt*dt/2
-                expected_accel = acceleration + jerk*dt
+                expected_pos = (
+                    position
+                    + velocity * dt
+                    + acceleration * dt * dt / 2
+                    + jerk * dt * dt * dt / 6
+                )
+                expected_vel = velocity + acceleration * dt + jerk * dt * dt / 2
+                expected_accel = acceleration + jerk * dt
                 self.assertEqual(new_segment.tai, new_tai)
                 self.assertAlmostEqual(new_segment.position, expected_pos, places=5)
                 self.assertAlmostEqual(new_segment.velocity, expected_vel, places=6)
@@ -140,11 +160,7 @@ class TestPathSegment(unittest.TestCase):
         """Test constructing a PathSegment with default arguments.
         """
         full_kwargs = dict(
-            tai=1573847242.4,
-            position=5.1,
-            velocity=4.3,
-            acceleration=0.23,
-            jerk=0.05,
+            tai=1573847242.4, position=5.1, velocity=4.3, acceleration=0.23, jerk=0.05,
         )
         for field_to_omit in full_kwargs:
             if field_to_omit == "tai":
@@ -157,7 +173,9 @@ class TestPathSegment(unittest.TestCase):
                     if field_name == field_to_omit:
                         self.assertEqual(getattr(segment, field_name), 0)
                     else:
-                        self.assertEqual(getattr(segment, field_name), full_kwargs[field_name])
+                        self.assertEqual(
+                            getattr(segment, field_name), full_kwargs[field_name]
+                        )
 
     def test_invalid_inputs(self):
         """Test invalid inputs for PathSegment.from_end_conditions.
@@ -171,9 +189,14 @@ class TestPathSegment(unittest.TestCase):
 
                 with self.assertRaises(ValueError):
                     simactuators.path.PathSegment.from_end_conditions(
-                        start_tai, start_position=1, start_velocity=2,
-                        end_tai=end_tai, end_position=1, end_velocity=2)
+                        start_tai,
+                        start_position=1,
+                        start_velocity=2,
+                        end_tai=end_tai,
+                        end_position=1,
+                        end_velocity=2,
+                    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
