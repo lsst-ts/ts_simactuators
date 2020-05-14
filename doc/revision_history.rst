@@ -2,15 +2,31 @@
 
 .. _lsst.ts.simactuators.revision_history:
 
-################################
-ts_simactuators Revision History
-################################
+################
+Revision History
+################
+
+v1.0.1
+======
+
+Changes:
+
+* Add ``tests/test_black.py`` to verify that files are formatted with black.
+  This requires ts_salobj 5.11 or later.
+* Fix flake8 warnings about f strings with no {}.
+* Update ``.travis.yml`` to remove ``sudo: false`` to github travis checks pass once again.
+
+Requires:
+
+* ts_salobj 5.11
 
 v1.0.0
 ======
 
-Format with black.
-Add a revision history.
+Changes:
+
+* Format with black.
+* Add a revision history.
 
 Requires:
 
