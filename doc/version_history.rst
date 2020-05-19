@@ -1,10 +1,10 @@
 .. py:currentmodule:: lsst.ts.simactuators
 
-.. _lsst.ts.simactuators.revision_history:
+.. _lsst.ts.simactuators.version_history:
 
-################
-Revision History
-################
+###############
+Version History
+###############
 
 v1.0.1
 ======
