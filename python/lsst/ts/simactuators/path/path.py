@@ -59,7 +59,7 @@ class Path:
         for segment in segments:
             if prev_tai is not None:
                 if segment.tai <= prev_tai:
-                    raise ValueError(f"segment start times not in increasing order")
+                    raise ValueError("segment start times not in increasing order")
                 prev_tai = segment.tai
 
         self.segments = segments
