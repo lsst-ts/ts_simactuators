@@ -21,10 +21,12 @@
 
 __all__ = ["PointToPointActuator"]
 
-import time
+
+from lsst.ts import salobj
+from . import base_point_to_point_actuator
 
 
-class PointToPointActuator:
+class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator):
     """Simulated actuator that moves to a specified position at constant
     velocity and halts.
 
@@ -34,26 +36,31 @@ class PointToPointActuator:
         Minimum allowed position.
     max_position : `float`
         Maximum allowed position.
-    start_position : `float`
-        Initial position.
     speed : `float`
         Speed of motion.
+    start_position : `float` or `None` (optional)
+        Initial position. If `None` use 0 if 0 is in range
+        ``[min_position, max_position]`` else use ``min_position``.
 
     Raises
     ------
     ValueError
-        If ``speed <= 0``,
-        ``min_position >= max_position``,
-        or ``start_position`` not in range ``[min_position, max_position]``.
+        If speed <= 0,
+        min_position >= max_position,
+        start_position`` is not None and start_position < min_position
+        or start_position > max_position.
     """
 
-    def __init__(self, min_position, max_position, start_position, speed):
-        if speed <= 0:
-            raise ValueError(f"speed={speed} must be positive")
+    def __init__(self, min_position, max_position, speed, start_position=None):
         if min_position >= max_position:
             raise ValueError(
                 f"min_position={min_position} must be < max_position={max_position}"
             )
+        if start_position is None:
+            if min_position <= 0 <= max_position:
+                start_position = 0
+            else:
+                start_position = min_position
         if not min_position <= start_position <= max_position:
             raise ValueError(
                 f"start_position={start_position} must be in range "
@@ -62,26 +69,18 @@ class PointToPointActuator:
 
         self.min_position = min_position
         self.max_position = max_position
-        self.speed = speed
-        self._start_position = start_position
-        self._end_position = start_position
-        # End time of move, or 0 if not moving.
-        self._end_time = 0
+        super().__init__(start_position=start_position, speed=speed)
 
-    @property
-    def start_position(self):
-        """Starting position of move.
-        """
-        return self._start_position
+    def set_position(self, position, start_tai=None):
+        """Set a new target position and return the move duration.
 
-    @property
-    def end_position(self):
-        """Ending position of move.
-        """
-        return self._end_position
-
-    def set_position(self, position):
-        """Set a new desired position.
+        Parameters
+        ----------
+        position : `float`
+            Target position.
+        start_tai : `float` or `None` (optional)
+            TAI date (unix seconds) of the start of the move.
+            If `None` use the current time.
 
         Raises
         ------
@@ -92,55 +91,9 @@ class PointToPointActuator:
             raise ValueError(
                 f"position={position} not in range [{self.min_position}, {self.max_position}]"
             )
-        self._start_position = self.current_position
-        self._end_position = position
-        dtime = self._move_duration()
-        self._end_time = time.monotonic() + dtime
-
-    @property
-    def current_position(self):
-        """Current position.
-        """
-        rem_time = self.remaining_time
-        if rem_time == 0:
-            return self.end_position
-        else:
-            return self.end_position - self.direction * self.speed * rem_time
-
-    @property
-    def direction(self):
-        """1 if moving or moved to greater position, -1 otherwise.
-        """
-        return 1 if self.end_position >= self.start_position else -1
-
-    @property
-    def moving(self):
-        """Is the axis moving?
-        """
-        return self.remaining_time > 0
-
-    def stop(self):
-        """Stop motion instantly.
-
-        Set end_position to the current position.
-        """
-        self._end_position = self.current_position
-        self._end_time = 0
-
-    @property
-    def remaining_time(self):
-        """Remaining time for this move (sec)."""
-        if self._end_time == 0:
-            return 0
-
-        rem_time = self._end_time - time.monotonic()
-        if rem_time <= 0:
-            self._end_time = 0
-            return 0
-
-        return rem_time
-
-    def _move_duration(self):
-        """Compute the total duration of a move, in seconds.
-        """
-        return abs(self.end_position - self.start_position) / self.speed
+        if start_tai is None:
+            start_tai = salobj.current_tai()
+        start_position = self.position(start_tai)
+        return self._set_position(
+            start_position=start_position, start_tai=start_tai, end_position=position
+        )
