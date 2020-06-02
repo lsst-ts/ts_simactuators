@@ -21,6 +21,7 @@
 
 from .base import *
 from .base_point_to_point_actuator import *
+from .circular_point_to_point_actuator import *
 from .point_to_point_actuator import *
 from .tracking_actuator import *
 from . import path
