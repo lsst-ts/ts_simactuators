@@ -6,6 +6,31 @@
 Version History
 ###############
 
+v2.0.0
+======
+
+Breaking changes:
+
+* Overhauled `PointToPointActuator` to use TAI dates (absolute times). Changes:
+    * Replaced the ``current_position`` property with a ``position`` method that takes an optional TAI time.
+    * Replaced the ``moving`` property with a ``moving`` method that takes an optional TAI time
+    * Replaced the ``remaining_time`` property with a ``remaining`` method that takes an optional TAI time
+    * Made the ``start_position`` constructor argument optional.
+      The default value matches `TrackingActuator`.
+    * Modified ``set_position`` to return the move duration.
+    * Added an optional ``start_tai`` argument to ``set_position``.
+      The default is the current time (the same behavior as before).
+    * Added ``start_tai`` and ``end_tai`` properties.
+    * Added a ``velocity`` method.
+
+Other changes:
+
+* Added `CircularPointToPointActuator`
+* Added the optional ``initial_position`` constructor argument to `TrackingActuator`.
+  The default gives the same behavior as before.
+* Added `BasePointToPointActuator`
+* Added `Direction` enumeration.
+
 v1.0.1
 ======
 

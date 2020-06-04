@@ -19,15 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .base import *
-from .base_point_to_point_actuator import *
-from .circular_point_to_point_actuator import *
-from .point_to_point_actuator import *
-from .tracking_actuator import *
-from .circular_tracking_actuator import *
-from . import path
+__all__ = ["Direction"]
 
-try:
-    from .version import *
-except ImportError:
-    __version__ = "?"
+import enum
+
+
+class Direction(enum.IntEnum):
+    """Direction of motion.
+
+    The values for POSITIVE and NEGATIVE can be used as a multiplier
+    for speed to compute velocity.
+    """
+
+    NEAREST = 0
+    NEGATIVE = -1
+    POSITIVE = 1
