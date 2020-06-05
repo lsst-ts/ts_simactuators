@@ -94,8 +94,26 @@ class TestTrackingActuator(unittest.TestCase):
         self.assertEqual(len(actuator.path), 1)
         self.assertEqual(actuator.path.kind, actuator.Kind.Stopped)
 
-        # position is 0 if in range [min_position, max_position),
-        # else min_position
+        for start_position in (
+            min_position,
+            (min_position + max_position) / 2,
+            max_position,
+        ):
+            actuator = simactuators.TrackingActuator(
+                min_position=min_position,
+                max_position=max_position,
+                max_velocity=max_velocity,
+                max_acceleration=max_acceleration,
+                dtmax_track=dtmax_track,
+                nsettle=nsettle,
+                tai=tai,
+                start_position=start_position,
+            )
+            self.assertAlmostEqual(actuator.path[-1].position, start_position)
+            self.assertAlmostEqual(actuator.target.position, start_position)
+
+        # Check that initial position is 0 if in range
+        # [min_position, max_position), else min_position.
         for min_position, max_position in itertools.product((-10, 0, 10), (-9, -1, 9),):
             if max_position <= min_position:
                 continue

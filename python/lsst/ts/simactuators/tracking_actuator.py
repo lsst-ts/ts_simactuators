@@ -33,17 +33,17 @@ class TrackingActuator:
     Parameters
     ----------
     min_position : `float`
-        Minimum allowed position (deg)
+        Minimum allowed position
     max_position : `float`
-        Maximum allowed position (deg)
+        Maximum allowed position
     max_velocity : `float`
-        Maximum allowed velocity (deg/sec)
+        Maximum allowed velocity (position units/second)
     max_acceleration : `float`
-        Maximum allowed acceleration (deg/sec^2)
+        Maximum allowed acceleration (position units/second^2)
     dtmax_track : `float`
         Maximum allowed time interval (tai - time of last segment)
-        for `set_target` to compute a tracking path (sec); if this limit
-        is not met then `set_target` computes a slewing path.
+        for `set_target` to compute a tracking path (second).
+        If this limit is not met then `set_target` computes a slewing path.
         This should be larger than the maximum expected time between calls to
         `set_target`, but not much more than that.
     nsettle : `int` (optional)
@@ -55,12 +55,18 @@ class TrackingActuator:
         (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
+    start_position : `float` or `None`
+        Initial position. If `None` use 0 if 0 is in range
+        ``[min_position, max_position]`` else use ``min_position``.
 
     Raises
     ------
     ValueError
-        If ``min_position >= max_position``,
-        ``max_velocity <= 0``, or ``max_acceleration <= 0``.
+        If min_position >= max_position,
+        max_velocity <= 0,
+        max_acceleration <= 0,
+        start_position is not None and  start_position < min_position,
+        or start_position > max_position.
 
     Notes
     -----
@@ -81,6 +87,7 @@ class TrackingActuator:
         dtmax_track,
         nsettle=2,
         tai=None,
+        start_position=None,
     ):
         if min_position >= max_position:
             raise ValueError(
@@ -96,16 +103,25 @@ class TrackingActuator:
         self.max_acceleration = max_acceleration
         self.dtmax_track = dtmax_track
         self.nsettle = nsettle
+        if start_position is None:
+            if min_position <= 0 <= max_position:
+                start_position = 0
+            else:
+                start_position = min_position
+        if start_position < min_position:
+            raise ValueError(
+                f"start_position={start_position} < min_position={min_position}"
+            )
+        if start_position > max_position:
+            raise ValueError(
+                f"start_position={start_position} > max_position={max_position}"
+            )
 
         if tai is None:
             tai = salobj.current_tai()
-        if min_position <= 0 and 0 < max_position:
-            position = 0
-        else:
-            position = min_position
-        self.target = path.PathSegment(tai=tai, position=position)
+        self.target = path.PathSegment(tai=tai, position=start_position)
         self.path = path.Path(
-            path.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped
+            path.PathSegment(tai=tai, position=start_position), kind=self.Kind.Stopped
         )
         self._ntrack = 0
 
@@ -141,50 +157,9 @@ class TrackingActuator:
         * The tracking segment path obeys the position, velocity
           and acceleration limits.
         """
-        prev_tai = self.target.tai  # last commanded time
-        dt = tai - prev_tai
-        newcurr = None
-        if dt <= 0:
-            raise ValueError(f"New tai = {tai} <= previous target tai = {prev_tai}")
-        if dt < self.dtmax_track:
-            # Try tracking.
-            prev_segment = self.path.at(prev_tai)
-            tracking_segment = path.PathSegment.from_end_conditions(
-                start_tai=prev_tai,
-                start_position=prev_segment.position,
-                start_velocity=prev_segment.velocity,
-                end_tai=tai,
-                end_position=position,
-                end_velocity=velocity,
-            )
-            limits = tracking_segment.limits(tai)
-            if (
-                limits.max_velocity <= self.max_velocity
-                and limits.max_acceleration <= self.max_acceleration
-                and limits.min_position >= self.min_position
-                and limits.max_position <= self.max_position
-            ):
-                # Tracking works.
-                newcurr = path.Path(
-                    tracking_segment,
-                    path.PathSegment(tai=tai, position=position, velocity=velocity),
-                    kind=self.Kind.Tracking,
-                )
-
-        if newcurr is None:
-            # Tracking didn't work, so slew.
-            curr_segment = self.path.at(tai)
-            newcurr = path.slew(
-                tai=tai,
-                start_position=curr_segment.position,
-                start_velocity=curr_segment.velocity,
-                end_position=position,
-                end_velocity=velocity,
-                max_velocity=self.max_velocity,
-                max_acceleration=self.max_acceleration,
-            )
+        new_path = self._compute_path(tai=tai, position=position, velocity=velocity)
         self.target = path.PathSegment(tai=tai, position=position, velocity=velocity)
-        self.path = newcurr
+        self.path = new_path
 
     @property
     def path(self):
@@ -275,3 +250,71 @@ class TrackingActuator:
         elif self.path.kind == self.Kind.Stopping and tai > self.path[-1].tai:
             return self.Kind.Stopped
         return self.path.kind
+
+    def _compute_path(self, tai, position, velocity):
+        """Compute a trajectory path to the specified target position,
+        velocity and time.
+
+        The actuator will track, if possible, else slew to match the target
+        path.
+
+        Parameters
+        ----------
+        tai : `float`
+            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        position : `float`
+            Position (deg)
+        velocity : `float`
+            Velocity (deg/sec)
+
+        Raises
+        ------
+        ValueError
+            If ``tai <= self.target.tai``,
+            where ``self.target.tai`` is the time of
+            the previous call to `set_target`.
+        """
+        prev_tai = self.target.tai  # last commanded time
+        dt = tai - prev_tai
+        newcurr = None
+        if dt <= 0:
+            raise ValueError(f"New tai = {tai} <= previous target tai = {prev_tai}")
+        if dt < self.dtmax_track:
+            # Try tracking.
+            prev_segment = self.path.at(prev_tai)
+            tracking_segment = path.PathSegment.from_end_conditions(
+                start_tai=prev_tai,
+                start_position=prev_segment.position,
+                start_velocity=prev_segment.velocity,
+                end_tai=tai,
+                end_position=position,
+                end_velocity=velocity,
+            )
+            limits = tracking_segment.limits(tai)
+            if (
+                limits.max_velocity <= self.max_velocity
+                and limits.max_acceleration <= self.max_acceleration
+                and limits.min_position >= self.min_position
+                and limits.max_position <= self.max_position
+            ):
+                # Tracking works.
+                newcurr = path.Path(
+                    tracking_segment,
+                    path.PathSegment(tai=tai, position=position, velocity=velocity),
+                    kind=self.Kind.Tracking,
+                )
+
+        if newcurr is None:
+            # Tracking didn't work, so slew.
+            curr_segment = self.path.at(tai)
+            newcurr = path.slew(
+                tai=tai,
+                start_position=curr_segment.position,
+                start_velocity=curr_segment.velocity,
+                end_position=position,
+                end_velocity=velocity,
+                max_velocity=self.max_velocity,
+                max_acceleration=self.max_acceleration,
+            )
+
+        return newcurr
