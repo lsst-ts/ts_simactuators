@@ -31,6 +31,10 @@ Other changes:
 * Added `BasePointToPointActuator`
 * Added `Direction` enumeration.
 
+Requires:
+
+* ts_salobj 5.15
+
 v1.0.1
 ======
 
