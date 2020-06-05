@@ -135,13 +135,6 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
           where ``self.target.tai`` is the time of
           the previous call to `set_target`.
         * The tracking segment path obeys the velocity and acceleration limits.
-
-        Raises
-        ------
-        ValueError
-            If ``tai <= self.target.tai``,
-            where ``self.target.tai`` is the time of
-            the previous call to `set_target`.
         """
         wrapped_position = salobj.angle_wrap_nonnegative(position).deg
         new_path = self._compute_directed_path(
