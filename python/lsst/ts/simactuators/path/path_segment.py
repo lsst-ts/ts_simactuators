@@ -54,13 +54,13 @@ class PathSegment:
     ----------
     tai : `float`
         TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
-    position : `float` at time ``tai`` (optional)
+    position : `float` at time ``tai``, optional
         Position (deg)
-    velocity : `float` at time ``tai`` (optional)
+    velocity : `float` at time ``tai``, optional
         Velocity at time ``tai`` (deg/sec)
-    acceleration : `float` (optional)
+    acceleration : `float`, optional
         Acceleration at time ``tai`` (deg/sec^2)
-    jerk : `float` (optional)
+    jerk : `float`, optional
         Jerk (deg/sec^3)
     """
 
@@ -89,16 +89,16 @@ class PathSegment:
         start_tai : `float`
             TAI time for start path (unix seconds, e.g. from
             lsst.ts.salobj.current_tai()).
-        start_position : `float` (optional)
+        start_position : `float`, optional
             Position at ``start_tai`` (deg)
-        start_velocity : `float` (optional)
+        start_velocity : `float`, optional
             Velocity at ``start_tai`` (deg/sec)
         end_tai : `float`
             TAI time for end path (unix seconds,
             e.g. from lsst.ts.salobj.current_tai()).
-        end_position : `float` (optional)
+        end_position : `float`, optional
             Position at ``end_tai`` (deg)
-        end_velocity : `float` (optional)
+        end_velocity : `float`, optional
             Velocity  at ``end_tai`` (deg/sec)
 
         Raises

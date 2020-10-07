@@ -111,7 +111,7 @@ class BasePointToPointActuator:
 
         Parameters
         ----------
-        tai : `float` or `None` (optional)
+        tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
@@ -123,7 +123,7 @@ class BasePointToPointActuator:
 
         Parameters
         ----------
-        tai : `float` or `None` (optional)
+        tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
@@ -135,7 +135,7 @@ class BasePointToPointActuator:
 
         Parameters
         ----------
-        tai : `float` or `None` (optional)
+        tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
@@ -152,7 +152,7 @@ class BasePointToPointActuator:
 
         Parameters
         ----------
-        tai : `float` or `None` (optional)
+        tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
