@@ -38,7 +38,7 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
         Maximum allowed position.
     speed : `float`
         Speed of motion.
-    start_position : `float` or `None` (optional)
+    start_position : `float` or `None`, optional
         Initial position. If `None` use 0 if 0 is in range
         ``[min_position, max_position]`` else use ``min_position``.
 
@@ -78,7 +78,7 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
         ----------
         position : `float`
             Target position.
-        start_tai : `float` or `None` (optional)
+        start_tai : `float` or `None`, optional
             TAI date (unix seconds) of the start of the move.
             If `None` use the current time.
 

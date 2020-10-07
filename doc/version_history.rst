@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v2.1.0
+======
+
+Changes:
+
+* Add ``tai`` argument to `BasePointToPointActuator.stop`.
+* Pin the version of ``black`` in ``conda/meta.yaml``.
+
+Requires:
+
+* ts_salobj 5.15 or 6
+
 v2.0.0
 ======
 

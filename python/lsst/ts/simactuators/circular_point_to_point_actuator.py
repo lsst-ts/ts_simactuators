@@ -40,7 +40,7 @@ class CircularPointToPointActuator(
     ----------
     speed : `float`
         Speed of motion (degrees/second).
-    start_position : `float` or `None` (optional)
+    start_position : `float` or `None`, optional
         Initial position (degrees).
 
     Raises
@@ -78,7 +78,7 @@ class CircularPointToPointActuator(
 
         Parameters
         ----------
-        tai : `float` or `None` (optional)
+        tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
         return salobj.angle_wrap_nonnegative(super().position(tai)).deg
@@ -90,9 +90,9 @@ class CircularPointToPointActuator(
         ----------
         position : `float`
             Commanded position, in degrees.
-        direction : `Direction` (optional)
+        direction : `Direction`, optional
             Direction of motion.
-        start_tai : `float` or `None` (optional)
+        start_tai : `float` or `None`, optional
             TAI date (unix seconds) of the start of the move.
             If `None` use the current time.
         """

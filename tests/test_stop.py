@@ -43,11 +43,11 @@ class TestStop(unittest.TestCase):
             Path to check
         tai : `float`
             TAI time (unix seconds, e.g. from time.time())
-        position : `float` (optional)
+        position : `float`, optional
             Position at ``tai`` (deg)
-        velocity : `float` (optional)
+        velocity : `float`, optional
             Velocity at ``tai`` (deg/sec)
-        max_acceleration : `float` (optional)
+        max_acceleration : `float`, optional
             Maximum allowed acceleration (deg/sec^2)
         """
         self.assertAlmostEqual(path[0].tai, tai)
