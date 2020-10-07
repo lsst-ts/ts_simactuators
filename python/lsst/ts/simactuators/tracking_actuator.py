@@ -46,11 +46,11 @@ class TrackingActuator:
         If this limit is not met then `set_target` computes a slewing path.
         This should be larger than the maximum expected time between calls to
         `set_target`, but not much more than that.
-    nsettle : `int` (optional)
+    nsettle : `int`, optional
         Number of calls to `set_target` after a slew finishes
         (meaning ``self.path.kind`` is tracking)
         before ``self.kind(tai)`` reports tracking instead of slewing.
-    tai : `float` (optional)
+    tai : `float`, optional
         TAI time for ``self.target`` and ``self.path``
         (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
         If None then use current TAI.
@@ -181,7 +181,7 @@ class TrackingActuator:
 
         Parameters
         ----------
-        tai : `float` (optional)
+        tai : `float`, optional
             TAI time for ``self.target`` and ``self.path``
             (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
             If None then use current TAI.
@@ -205,12 +205,12 @@ class TrackingActuator:
 
         Parameters
         ----------
-        tai : `float` (optional)
+        tai : `float`, optional
             TAI time for ``self.target`` and ``self.path``
             (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
-        position : `float` (optional)
+        position : `float`, optional
             Position at which to stop (deg); if `None` then stop at position
             at time ``tai``.
         """
@@ -227,7 +227,7 @@ class TrackingActuator:
 
         Parameters
         ----------
-        tai : `float` (optional)
+        tai : `float`, optional
             TAI time at which to evaluate the kind of path
             (TAI unix seconds, e.g. from lsst.ts.salobj.current_tai()).
             If None then use current TAI.
