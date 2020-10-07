@@ -207,7 +207,7 @@ class TestPointToPointActuator(asynctest.TestCase):
             with self.assertRaises(ValueError):
                 actuator.set_position(bad_end_position)
 
-    async def test_stop(self):
+    async def test_stop_default_tai(self):
         min_position = -10
         max_position = 10
         start_position = 3
@@ -259,6 +259,47 @@ class TestPointToPointActuator(asynctest.TestCase):
         self.assertEqual(actuator.start_position, start_position)
         self.assertEqual(actuator.end_position, old_pos)
         self.assertAlmostEqual(actuator.end_tai, tai0, delta=time_slop)
+
+    async def test_stop_specified_tai(self):
+        min_position = -10
+        max_position = 10
+        start_position = 3
+        # Slow motion so plenty of time to stop
+        speed = 0.1
+        actuator = simactuators.PointToPointActuator(
+            min_position=min_position,
+            max_position=max_position,
+            start_position=start_position,
+            speed=speed,
+        )
+        end_position = 4
+        start_tai = 12.1  # arbitrary
+        duration = actuator.set_position(end_position, start_tai=start_tai)
+        self.assertEqual(actuator.end_position, end_position)
+        predicted_duration = (end_position - start_position) / speed
+        self.assertAlmostEqual(duration, predicted_duration)
+        end_tai = start_tai + duration
+        self.assertAlmostEqual(actuator.end_tai, end_tai)
+        self.assertFalse(actuator.moving(tai=start_tai - 0.001))
+        self.assertFalse(actuator.moving(tai=end_tai + 0.001))
+        self.assertTrue(actuator.moving(tai=start_tai + 0.001))
+        self.assertTrue(actuator.moving(tai=end_tai - 0.001))
+
+        # Let the actuator move for some arbitrary time
+        # that is less than the remaining time
+        stop_dtime = 0.21
+        stop_tai = stop_dtime + start_tai
+        self.assertGreater(duration, stop_dtime)
+        actuator.stop(tai=stop_tai)
+
+        self.assertEqual(actuator.end_tai, stop_tai)
+        self.assertFalse(actuator.moving(tai=start_tai - 0.001))
+        self.assertFalse(actuator.moving(tai=stop_tai + 0.001))
+        self.assertTrue(actuator.moving(tai=start_tai + 0.001))
+        self.assertTrue(actuator.moving(tai=stop_tai - 0.001))
+        self.assertEqual(actuator.end_tai, stop_tai)
+        predicted_end_position = start_position + speed * stop_dtime
+        self.assertAlmostEqual(actuator.end_position, predicted_end_position)
 
 
 if __name__ == "__main__":

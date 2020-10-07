@@ -48,6 +48,11 @@ class BasePointToPointActuator:
     enough to mimic actually changing actuator speed during a move.
     Changing speed does not change `start_position`, `end_position`,
     `start_tai`, or `end_tai`.
+
+    The default value for all time arguments is current TAI, in unix seconds.
+    However, you may use any zero point for time that you like, as long as
+    you always specify the time argument. This can be handy in unit tests,
+    as it can eliminate the need to wait for an actuator to move.
     """
 
     def __init__(self, start_position, speed):
@@ -161,12 +166,19 @@ class BasePointToPointActuator:
             return 0
         return self.speed * self.direction
 
-    def stop(self):
+    def stop(self, tai=None):
         """Stop motion instantly.
 
-        Set end_position to the current position.
+        Set end_position to the current position,
+        or to the position at the specified time.
+
+        Parameters
+        ----------
+        tai : `float` or `None`, optional
+            TAI date, unix seconds. Current time if `None`.
         """
-        tai = salobj.current_tai()
+        if tai is None:
+            tai = salobj.current_tai()
         self._end_position = self.position(tai)
         self._end_tai = tai
 
