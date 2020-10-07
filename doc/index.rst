@@ -16,10 +16,12 @@ Using lsst.ts.simactuators
 The primary classes are:
 
 * `PointToPointActuator` simulates a simple actuator that moves to a give position at a constant speed, then stops.
-  Examples include hexapod struts and dome shutters.
-  Note that the ATDome azimuth axis has no position limits, so it is *not* well modeled by this actuator.
+  Examples include hexapod struts and telescope dome shutters.
+* `CircularPointToPointActuator` a point to point actuator that moves in a circle with no limits.
+  Examples include some telescope dome azimuth actuators.
 * `TrackingActuator` simulates an actuator that slews to and tracks a path defined by a series of position, velocity, time triplets.
   Examples include telescope azimuth, altitude and rotator axes.
+* `CircularTrackingActuator` a tracking actuator that moves in a circle with no limits.
 
 Contributing
 ============
