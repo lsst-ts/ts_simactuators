@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v2.1.1
+======
+
+Changes:
+
+* Update Jenkinsfile.conda to use the shared library.
+* Pin the versions of ts_idl and ts_salobj in conda/meta.yaml.
+
+Requires:
+
+* ts_salobj 5.15 or 6
+
 v2.1.0
 ======
 
