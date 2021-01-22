@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v2.2.0
+======
+
+Changes:
+
+* Add `CosineGenerator` and `RampGenerator` generator functors.
+  These are designed to be used in CSC commanders.
+
+Requires:
+
+* ts_salobj 6
+
 v2.1.1
 ======
 
