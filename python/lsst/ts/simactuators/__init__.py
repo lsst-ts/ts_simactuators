@@ -25,6 +25,7 @@ from .circular_point_to_point_actuator import *
 from .point_to_point_actuator import *
 from .tracking_actuator import *
 from .circular_tracking_actuator import *
+from .commander_utils import *
 from . import path
 
 try:
