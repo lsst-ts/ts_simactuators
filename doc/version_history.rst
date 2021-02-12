@@ -11,7 +11,7 @@ v2.2.1
 
 Changes:
 
-* `RampGenerator: use a safer way to copy an array.
+* `RampGenerator`: use a safer way to copy an array.
 
 Requires:
 
