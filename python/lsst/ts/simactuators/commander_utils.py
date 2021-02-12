@@ -251,7 +251,7 @@ class RampGenerator:
             position_arr = self.start_position_arr + self.velocity_arr * (
                 tai - start_tai
             )
-            velocity_arr = self.velocity_arr[:]
+            velocity_arr = self.velocity_arr.copy()
             for i in range(self.naxes):
                 if tai > end_tai_arr[i]:
                     position_arr[i] = self.end_position_arr[i]
