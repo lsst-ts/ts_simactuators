@@ -6,6 +6,17 @@
 Version History
 ###############
 
+v2.2.1
+======
+
+Changes:
+
+* `RampGenerator: use a safer way to copy an array.
+
+Requires:
+
+* ts_salobj 6
+
 v2.2.0
 ======
 
