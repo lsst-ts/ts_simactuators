@@ -75,7 +75,10 @@ class TestStop(unittest.TestCase):
         tai = 1550000000
         max_acceleration = 10
 
-        for position, velocity in itertools.product((-5, 0, 30), (-3, -1, 2, 4),):
+        for position, velocity in itertools.product(
+            (-5, 0, 30),
+            (-3, -1, 2, 4),
+        ):
             with self.subTest(position=position, velocity=velocity):
                 path = simactuators.path.stop(
                     tai=tai,

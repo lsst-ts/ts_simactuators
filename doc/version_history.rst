@@ -6,6 +6,16 @@
 Version History
 ###############
 
+v2.2.2
+======
+
+* Use `unittest.IsolatedAsyncioTestCase` instead of the abandoned asynctest package.
+* Format the code with black 20.8b1.
+
+Requires:
+
+* ts_salobj 6
+
 v2.2.1
 ======
 

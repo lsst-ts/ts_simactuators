@@ -22,19 +22,18 @@
 import asyncio
 import unittest
 
-import asynctest
-
 from lsst.ts import salobj
 from lsst.ts import simactuators
 
 
-class TestCircularPointToPointActuator(asynctest.TestCase):
+class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
     def test_constructor(self):
         speed = 1.5
         for start_position in (-360, -180, -1, 0, 359.99, 360):
             tai0 = salobj.current_tai()
             actuator = simactuators.CircularPointToPointActuator(
-                start_position=start_position, speed=speed,
+                start_position=start_position,
+                speed=speed,
             )
             time_slop = salobj.current_tai() - tai0
             if 0 <= start_position < 360:
@@ -57,7 +56,8 @@ class TestCircularPointToPointActuator(asynctest.TestCase):
             with self.subTest(bad_speed=bad_speed):
                 with self.assertRaises(ValueError):
                     simactuators.CircularPointToPointActuator(
-                        start_position=start_position, speed=bad_speed,
+                        start_position=start_position,
+                        speed=bad_speed,
                     )
 
     async def test_set_position(self):
@@ -125,7 +125,8 @@ class TestCircularPointToPointActuator(asynctest.TestCase):
         # Make the move a reasonable length
         speed = 2.0 / abs(end_position - start_position)
         actuator = simactuators.CircularPointToPointActuator(
-            start_position=start_position, speed=speed,
+            start_position=start_position,
+            speed=speed,
         )
         direction = kwargs.get("direction", simactuators.Direction.NEAREST)
         # Sleep a bit so actuator.start_tai will change by a noticeable amount
@@ -190,7 +191,8 @@ class TestCircularPointToPointActuator(asynctest.TestCase):
         # Slow motion so plenty of time to stop
         speed = 0.1
         actuator = simactuators.CircularPointToPointActuator(
-            start_position=start_position, speed=speed,
+            start_position=start_position,
+            speed=speed,
         )
         duration = actuator.set_position(
             target_position, direction=simactuators.Direction.NEAREST

@@ -99,7 +99,10 @@ class TestSlew(unittest.TestCase):
         max_velocity = 3
         max_acceleration = 2
 
-        for start_position, start_velocity in itertools.product((-5, 0, 30), (0, 1),):
+        for start_position, start_velocity in itertools.product(
+            (-5, 0, 30),
+            (0, 1),
+        ):
             with self.subTest(
                 start_position=start_position, start_velocity=start_velocity
             ):
@@ -143,7 +146,8 @@ class TestSlew(unittest.TestCase):
         dp_max_velocity = 0.5 * max_acceleration * dt_max_velocity ** 2
 
         for start_position, dpos in itertools.product(
-            (-5, 0), (-2.001 * dp_max_velocity, 10 * dp_max_velocity),
+            (-5, 0),
+            (-2.001 * dp_max_velocity, 10 * dp_max_velocity),
         ):
             with self.subTest(start_position=start_position, dpos=dpos):
                 # time enough to ramp up to full speed
@@ -222,7 +226,8 @@ class TestSlew(unittest.TestCase):
         dp_max_velocity = 0.5 * max_acceleration * dt_max_velocity ** 2
 
         for start_position, dpos in itertools.product(
-            (-5, 0), (0.1 * dp_max_velocity, -0.9 * dp_max_velocity),
+            (-5, 0),
+            (0.1 * dp_max_velocity, -0.9 * dp_max_velocity),
         ):
             with self.subTest(start_position=start_position, dpos=dpos):
                 # not enough time to ramp up to full speed

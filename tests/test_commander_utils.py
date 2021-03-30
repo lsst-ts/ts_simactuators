@@ -23,14 +23,13 @@ import asyncio
 import math
 import unittest
 
-import asynctest
 import numpy as np
 
 from lsst.ts import salobj
 from lsst.ts import simactuators
 
 
-class TestCommanderUtils(asynctest.TestCase):
+class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
     def test_cosine_generator_constructor_errors(self):
         center_positions = [1, -2, 3.3]
         amplitudes = [-2.1, 0, 1.2]
@@ -71,7 +70,9 @@ class TestCommanderUtils(asynctest.TestCase):
         end_positions = [-3, -2, 4.1]
         speeds = [1, 0, -1]  # Check that sign is ignored
         simactuators.RampGenerator(
-            start_positions=start_positions, end_positions=end_positions, speeds=speeds,
+            start_positions=start_positions,
+            end_positions=end_positions,
+            speeds=speeds,
         )
 
         with self.assertRaises(ValueError):

@@ -22,13 +22,11 @@
 import asyncio
 import unittest
 
-import asynctest
-
 from lsst.ts import salobj
 from lsst.ts import simactuators
 
 
-class TestPointToPointActuator(asynctest.TestCase):
+class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
     def test_constructor(self):
         min_position = -1
         max_position = 5
@@ -111,7 +109,10 @@ class TestPointToPointActuator(asynctest.TestCase):
         # A move to the start position should have no effect.
         pos = 1
         actuator = simactuators.PointToPointActuator(
-            min_position=pos - 1, max_position=pos + 1, start_position=pos, speed=2,
+            min_position=pos - 1,
+            max_position=pos + 1,
+            start_position=pos,
+            speed=2,
         )
         duration = actuator.set_position(pos)
         self.assertEqual(duration, 0)
