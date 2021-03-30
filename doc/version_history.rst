@@ -10,6 +10,7 @@ v2.2.2
 ======
 
 * Use `unittest.IsolatedAsyncioTestCase` instead of the abandoned asynctest package.
+* Modernize doc/conf.py for documenteer 0.6.
 * Format the code with black 20.8b1.
 
 Requires:
