@@ -23,14 +23,13 @@ import asyncio
 import math
 import unittest
 
-import asynctest
 import numpy as np
 
 from lsst.ts import salobj
 from lsst.ts import simactuators
 
 
-class TestCommanderUtils(asynctest.TestCase):
+class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
     def test_cosine_generator_constructor_errors(self):
         center_positions = [1, -2, 3.3]
         amplitudes = [-2.1, 0, 1.2]

@@ -22,13 +22,11 @@
 import asyncio
 import unittest
 
-import asynctest
-
 from lsst.ts import salobj
 from lsst.ts import simactuators
 
 
-class TestCircularPointToPointActuator(asynctest.TestCase):
+class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
     def test_constructor(self):
         speed = 1.5
         for start_position in (-360, -180, -1, 0, 359.99, 360):
