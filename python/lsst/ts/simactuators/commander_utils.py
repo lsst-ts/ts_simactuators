@@ -28,7 +28,12 @@ import numpy as np
 
 class CosineGenerator:
     def __init__(
-        self, center_positions, amplitudes, max_speeds, advance_time=0.1, nextra=5,
+        self,
+        center_positions,
+        amplitudes,
+        max_speeds,
+        advance_time=0.1,
+        nextra=5,
     ):
         """Functor to generate position, velocity and time for one period
         of a cosine, in one or more axes.
@@ -226,8 +231,7 @@ class RampGenerator:
 
     @property
     def duration(self):
-        """Duration of the move (seconds), ignoring the extra elements.
-        """
+        """Duration of the move (seconds), ignoring the extra elements."""
         return np.amax(self.duration_arr)
 
     def __call__(self):

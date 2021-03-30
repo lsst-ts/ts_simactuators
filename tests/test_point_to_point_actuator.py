@@ -111,7 +111,10 @@ class TestPointToPointActuator(asynctest.TestCase):
         # A move to the start position should have no effect.
         pos = 1
         actuator = simactuators.PointToPointActuator(
-            min_position=pos - 1, max_position=pos + 1, start_position=pos, speed=2,
+            min_position=pos - 1,
+            max_position=pos + 1,
+            start_position=pos,
+            speed=2,
         )
         duration = actuator.set_position(pos)
         self.assertEqual(duration, 0)

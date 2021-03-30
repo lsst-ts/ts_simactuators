@@ -93,11 +93,15 @@ class TestCircularTrackingActuator(unittest.TestCase):
         # Check that max_acceleration must be positive.
         with self.assertRaises(ValueError):
             simactuators.CircularTrackingActuator(
-                max_velocity=max_velocity, max_acceleration=0, dtmax_track=dtmax_track,
+                max_velocity=max_velocity,
+                max_acceleration=0,
+                dtmax_track=dtmax_track,
             )
         with self.assertRaises(ValueError):
             simactuators.CircularTrackingActuator(
-                max_velocity=max_velocity, max_acceleration=-1, dtmax_track=dtmax_track,
+                max_velocity=max_velocity,
+                max_acceleration=-1,
+                dtmax_track=dtmax_track,
             )
 
     def test_set_target(self):

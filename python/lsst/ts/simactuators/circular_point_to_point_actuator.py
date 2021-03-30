@@ -63,14 +63,12 @@ class CircularPointToPointActuator(
 
     @property
     def start_position(self):
-        """Starting position of move in the range [0, 360) degrees.
-        """
+        """Starting position of move in the range [0, 360) degrees."""
         return salobj.angle_wrap_nonnegative(self._start_position).deg
 
     @property
     def end_position(self):
-        """Ending position of move, in the range [0, 360) degrees.
-        """
+        """Ending position of move, in the range [0, 360) degrees."""
         return salobj.angle_wrap_nonnegative(self._end_position).deg
 
     def position(self, tai=None):

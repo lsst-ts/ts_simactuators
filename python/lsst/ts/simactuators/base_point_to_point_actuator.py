@@ -89,26 +89,22 @@ class BasePointToPointActuator:
 
     @property
     def end_position(self):
-        """Ending position of move.
-        """
+        """Ending position of move."""
         return self._end_position
 
     @property
     def end_tai(self):
-        """TAI date at end of move, unix seconds.
-        """
+        """TAI date at end of move, unix seconds."""
         return self._end_tai
 
     @property
     def start_position(self):
-        """Starting position of move.
-        """
+        """Starting position of move."""
         return self._start_position
 
     @property
     def start_tai(self):
-        """TAI date at start of move move recent move.
-        """
+        """TAI date at start of move move recent move."""
         return self._start_tai
 
     def remaining_time(self, tai=None):
@@ -183,8 +179,7 @@ class BasePointToPointActuator:
         self._end_tai = tai
 
     def _set_position(self, start_position, start_tai, end_position):
-        """Set start and end positions and times and return the move duration.
-        """
+        """Set start and end positions and times and return move duration."""
         self._start_position = start_position
         self._start_tai = start_tai
         self._end_position = end_position

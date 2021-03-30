@@ -71,7 +71,9 @@ class TestCommanderUtils(asynctest.TestCase):
         end_positions = [-3, -2, 4.1]
         speeds = [1, 0, -1]  # Check that sign is ignored
         simactuators.RampGenerator(
-            start_positions=start_positions, end_positions=end_positions, speeds=speeds,
+            start_positions=start_positions,
+            end_positions=end_positions,
+            speeds=speeds,
         )
 
         with self.assertRaises(ValueError):
