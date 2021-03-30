@@ -33,8 +33,7 @@ class TestPathSegment(unittest.TestCase):
     def check_from_end_conditions(
         self, start_position, start_velocity, end_position, end_velocity, dt
     ):
-        """Check PathSegment from_end_conditions and limits methods.
-        """
+        """Check PathSegment from_end_conditions and limits methods."""
         start_tai = 45.3  # any value will do
         end_tai = start_tai + dt
         segment = simactuators.path.PathSegment.from_end_conditions(
@@ -90,7 +89,11 @@ class TestPathSegment(unittest.TestCase):
             end_velocity,
             dt,
         ) in itertools.product(
-            (0, -0.5, 0.2), (0, -0.2, 0.1), (0, 0.3, -0.6), (0, 0.3, -0.2), (1, 5),
+            (0, -0.5, 0.2),
+            (0, -0.2, 0.1),
+            (0, 0.3, -0.6),
+            (0, 0.3, -0.2),
+            (1, 5),
         ):
             with self.subTest(
                 start_position=start_position,
@@ -157,10 +160,13 @@ class TestPathSegment(unittest.TestCase):
                 self.assertEqual(new_segment.jerk, jerk)
 
     def test_default_arguments(self):
-        """Test constructing a PathSegment with default arguments.
-        """
+        """Test constructing a PathSegment with default arguments."""
         full_kwargs = dict(
-            tai=1573847242.4, position=5.1, velocity=4.3, acceleration=0.23, jerk=0.05,
+            tai=1573847242.4,
+            position=5.1,
+            velocity=4.3,
+            acceleration=0.23,
+            jerk=0.05,
         )
         for field_to_omit in full_kwargs:
             if field_to_omit == "tai":

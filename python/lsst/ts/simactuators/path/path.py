@@ -26,8 +26,7 @@ import enum
 
 
 class Kind(enum.Enum):
-    """Kind of path.
-    """
+    """Kind of path."""
 
     Stopped = enum.auto()
     Tracking = enum.auto()
