@@ -23,7 +23,7 @@ test:
     - ts-conda-build =0.3
     - ts-dds
     - ts-idl {{ idl_version }}
-    - ts-salobj {{ salobj_version }}
+    - ts-utils
   source_files:
     - python
     - tests
@@ -42,4 +42,4 @@ requirements:
     - python
     - setuptools
     - setuptools_scm
-    - ts-salobj
+    - ts-utils

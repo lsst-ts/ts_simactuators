@@ -21,8 +21,7 @@
 
 __all__ = ["TrackingActuator"]
 
-from lsst.ts import salobj
-
+from lsst.ts import utils
 from . import path
 
 
@@ -52,7 +51,7 @@ class TrackingActuator:
         before ``self.kind(tai)`` reports tracking instead of slewing.
     tai : `float`, optional
         TAI time for ``self.target`` and ``self.path``
-        (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        (unix seconds, e.g. from lsst.ts.utils.current_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
     start_position : `float` or `None`
@@ -118,7 +117,7 @@ class TrackingActuator:
             )
 
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         self.target = path.PathSegment(tai=tai, position=start_position)
         self.path = path.Path(
             path.PathSegment(tai=tai, position=start_position), kind=self.Kind.Stopped
@@ -134,7 +133,7 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
         position : `float`
             Position (deg)
         velocity : `float`
@@ -183,12 +182,12 @@ class TrackingActuator:
         ----------
         tai : `float`, optional
             TAI time for ``self.target`` and ``self.path``
-            (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            (unix seconds, e.g. from lsst.ts.utils.current_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         curr_segment = self.path.at(tai)
         self.path = path.stop(
             tai=tai,
@@ -207,7 +206,7 @@ class TrackingActuator:
         ----------
         tai : `float`, optional
             TAI time for ``self.target`` and ``self.path``
-            (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            (unix seconds, e.g. from lsst.ts.utils.current_tai()).
             If None then use current TAI.
             This is primarily for unit tests; None is usually what you want.
         position : `float`, optional
@@ -215,7 +214,7 @@ class TrackingActuator:
             at time ``tai``.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         if position is None:
             position = self.path.at(tai).position
         self.path = path.Path(
@@ -229,7 +228,7 @@ class TrackingActuator:
         ----------
         tai : `float`, optional
             TAI time at which to evaluate the kind of path
-            (TAI unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            (TAI unix seconds, e.g. from lsst.ts.utils.current_tai()).
             If None then use current TAI.
             Ignored unless stopping.
 
@@ -241,7 +240,7 @@ class TrackingActuator:
           last segment, then the kind is reported as stopped.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         if self.path.kind == self.Kind.Tracking:
             if self._ntrack > self.nsettle:
                 return self.Kind.Tracking
@@ -261,7 +260,7 @@ class TrackingActuator:
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
         position : `float`
             Position (deg)
         velocity : `float`

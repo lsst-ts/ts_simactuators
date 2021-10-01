@@ -47,7 +47,7 @@ def slew(
     Parameters
     ----------
     tai : `float`
-        TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
     start_position : `float`
         Position of A at time ``tai`` (deg)
     start_velocity : `float`

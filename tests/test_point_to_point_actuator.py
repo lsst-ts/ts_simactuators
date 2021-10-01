@@ -22,7 +22,7 @@
 import asyncio
 import unittest
 
-from lsst.ts import salobj
+from lsst.ts import utils
 from lsst.ts import simactuators
 
 
@@ -34,14 +34,14 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         speed = 1.5
         for good_start_position in (start_position, min_position, max_position):
             with self.subTest(good_start_position=good_start_position):
-                tai0 = salobj.current_tai()
+                tai0 = utils.current_tai()
                 actuator = simactuators.PointToPointActuator(
                     min_position=min_position,
                     max_position=max_position,
                     start_position=good_start_position,
                     speed=speed,
                 )
-                time_slop = salobj.current_tai() - tai0
+                time_slop = utils.current_tai() - tai0
                 self.assertAlmostEqual(actuator.start_tai, tai0, delta=time_slop)
                 self.assertEqual(actuator.start_position, good_start_position)
                 self.assertEqual(actuator.end_position, actuator.start_position)
@@ -148,10 +148,10 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(0.1)
         # Keep track of how long it takes to call `set_position`
         # so we know how picky to be when testing `start_tai`.
-        tai0 = salobj.current_tai()
+        tai0 = utils.current_tai()
         duration = actuator.set_position(end_position)
         remaining_time = actuator.remaining_time()
-        time_slop = salobj.current_tai() - tai0
+        time_slop = utils.current_tai() - tai0
         predicted_duration = abs(end_position - start_position) / speed
         self.assertAlmostEqual(duration, predicted_duration)
         self.assertAlmostEqual(actuator.start_tai, tai0, delta=time_slop)
@@ -223,15 +223,15 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         end_position = 4
         duration = actuator.set_position(end_position)
         self.assertEqual(actuator.end_position, end_position)
-        self.assertTrue(actuator.moving(salobj.current_tai()))
+        self.assertTrue(actuator.moving(utils.current_tai()))
         # Let the actuator move for some arbitrary time
         # that is less than the remaining time
         sleep_time = 0.21
         self.assertGreater(duration, sleep_time)
         await asyncio.sleep(sleep_time)
-        tai0 = salobj.current_tai()
+        tai0 = utils.current_tai()
         actuator.stop()
-        time_slop = salobj.current_tai() - tai0
+        time_slop = utils.current_tai() - tai0
         self.assertAlmostEqual(tai0, actuator.end_tai, delta=time_slop)
         position_slop = time_slop * speed
         self.assertAlmostEqual(
@@ -253,9 +253,9 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(0.1)
         old_start_tai = actuator.start_tai
         old_pos = actuator.end_position
-        tai0 = salobj.current_tai()
+        tai0 = utils.current_tai()
         actuator.stop()
-        time_slop = salobj.current_tai()
+        time_slop = utils.current_tai()
         self.assertEqual(actuator.start_tai, old_start_tai)
         self.assertEqual(actuator.start_position, start_position)
         self.assertEqual(actuator.end_position, old_pos)

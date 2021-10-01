@@ -71,7 +71,7 @@ class Path:
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
 
         Returns
         -------

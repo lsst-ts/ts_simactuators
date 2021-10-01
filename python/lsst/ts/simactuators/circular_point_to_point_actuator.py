@@ -21,7 +21,7 @@
 
 __all__ = ["CircularPointToPointActuator"]
 
-from lsst.ts import salobj
+from lsst.ts import utils
 from . import base
 from . import base_point_to_point_actuator
 
@@ -57,19 +57,19 @@ class CircularPointToPointActuator(
         if start_position is None:
             start_position = 0
         super().__init__(
-            start_position=salobj.angle_wrap_nonnegative(start_position).deg,
+            start_position=utils.angle_wrap_nonnegative(start_position).deg,
             speed=speed,
         )
 
     @property
     def start_position(self):
         """Starting position of move in the range [0, 360) degrees."""
-        return salobj.angle_wrap_nonnegative(self._start_position).deg
+        return utils.angle_wrap_nonnegative(self._start_position).deg
 
     @property
     def end_position(self):
         """Ending position of move, in the range [0, 360) degrees."""
-        return salobj.angle_wrap_nonnegative(self._end_position).deg
+        return utils.angle_wrap_nonnegative(self._end_position).deg
 
     def position(self, tai=None):
         """Current position.
@@ -79,7 +79,7 @@ class CircularPointToPointActuator(
         tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
-        return salobj.angle_wrap_nonnegative(super().position(tai)).deg
+        return utils.angle_wrap_nonnegative(super().position(tai)).deg
 
     def set_position(self, position, direction=base.Direction.NEAREST, start_tai=None):
         """Set a new target position and return the move duration.
@@ -96,9 +96,9 @@ class CircularPointToPointActuator(
         """
         direction = base.Direction(direction)
         if start_tai is None:
-            start_tai = salobj.current_tai()
-        start_position = salobj.angle_wrap_nonnegative(self.position(start_tai)).deg
-        delta = salobj.angle_diff(position, start_position).deg
+            start_tai = utils.current_tai()
+        start_position = utils.angle_wrap_nonnegative(self.position(start_tai)).deg
+        delta = utils.angle_diff(position, start_position).deg
         if direction is base.Direction.POSITIVE:
             if delta < 0:
                 delta += 360

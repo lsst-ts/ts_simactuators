@@ -34,7 +34,7 @@ def stop(tai, position, velocity, max_acceleration):
     Parameters
     ----------
     tai : `float`
-        TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
     position : `float`
         Position at time ``tai`` (deg)
     velocity : `float`

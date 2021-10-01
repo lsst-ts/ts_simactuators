@@ -1,4 +1,4 @@
 setupRequired(sconsUtils)
-setupRequired(ts_salobj)
+setupRequired(ts_utils)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)

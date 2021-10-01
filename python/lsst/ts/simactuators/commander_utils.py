@@ -21,9 +21,9 @@
 
 __all__ = ["CosineGenerator", "RampGenerator"]
 
-from lsst.ts import salobj
-
 import numpy as np
+
+from lsst.ts import utils
 
 
 class CosineGenerator:
@@ -132,7 +132,7 @@ class CosineGenerator:
         * tai_time : `float`
             Current time + advance_time (TAI unix seconds).
         """
-        tai = salobj.current_tai() + self.advance_time
+        tai = utils.current_tai() + self.advance_time
         start_tai = tai
         end_tai_arr = start_tai + self.period_arr
         max_tai = np.max(end_tai_arr)
@@ -149,12 +149,12 @@ class CosineGenerator:
                     position_arr[i] = self.end_position_arr[i]
                     velocity_arr[i] = 0
             yield (position_arr, velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time
 
         zero_velocity_arr = np.zeros(self.naxes)
         for i in range(self.nextra):
             yield (self.end_position_arr, zero_velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time
 
 
 class RampGenerator:
@@ -246,7 +246,7 @@ class RampGenerator:
         * tai_time : `float`
             Current time + advance_time (TAI unix seconds).
         """
-        tai = salobj.current_tai() + self.advance_time
+        tai = utils.current_tai() + self.advance_time
         start_tai = tai
         end_tai_arr = start_tai + self.duration_arr
         max_tai = np.max(end_tai_arr)
@@ -261,9 +261,9 @@ class RampGenerator:
                     position_arr[i] = self.end_position_arr[i]
                     velocity_arr[i] = 0
             yield (position_arr, velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time
 
         zero_velocity_arr = np.zeros(self.naxes)
         for i in range(self.nextra):
             yield (self.end_position_arr, zero_velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time

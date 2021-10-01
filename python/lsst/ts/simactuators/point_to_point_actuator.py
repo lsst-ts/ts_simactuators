@@ -21,8 +21,7 @@
 
 __all__ = ["PointToPointActuator"]
 
-
-from lsst.ts import salobj
+from lsst.ts import utils
 from . import base_point_to_point_actuator
 
 
@@ -92,7 +91,7 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
                 f"position={position} not in range [{self.min_position}, {self.max_position}]"
             )
         if start_tai is None:
-            start_tai = salobj.current_tai()
+            start_tai = utils.current_tai()
         start_position = self.position(start_tai)
         return self._set_position(
             start_position=start_position, start_tai=start_tai, end_position=position

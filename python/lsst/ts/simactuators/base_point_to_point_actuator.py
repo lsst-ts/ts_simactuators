@@ -21,7 +21,7 @@
 
 __all__ = ["BasePointToPointActuator"]
 
-from lsst.ts import salobj
+from lsst.ts import utils
 from . import base
 
 
@@ -66,7 +66,7 @@ class BasePointToPointActuator:
         # End position of a move; the current position if not moving.
         self._end_position = start_position
         # Start time of move.
-        self._start_tai = salobj.current_tai()
+        self._start_tai = utils.current_tai()
         # End time of move. Record this, rather than computing it on demand,
         # because it allows a user to change the speed without altering
         # the end time.
@@ -116,7 +116,7 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         return max(0, self.end_tai - tai)
 
     def moving(self, tai=None):
@@ -128,7 +128,7 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         return self.start_tai < tai < self.end_tai
 
     def position(self, tai=None):
@@ -140,7 +140,7 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         if tai > self.end_tai:
             return self.end_position
         elif tai < self.start_tai:
@@ -157,7 +157,7 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         if not self.moving(tai):
             return 0
         return self.speed * self.direction
@@ -174,7 +174,7 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         self._end_position = self.position(tai)
         self._end_tai = tai
 

@@ -25,7 +25,7 @@ import unittest
 
 import numpy as np
 
-from lsst.ts import salobj
+from lsst.ts import utils
 from lsst.ts import simactuators
 
 
@@ -135,7 +135,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             positions_list.append(positions)
             velocities_list.append(velocities)
             tais.append(tai)
-            curr_tai = salobj.current_tai()
+            curr_tai = utils.current_tai()
             self.assertAlmostEqual(curr_tai + advance_time, tai, delta=0.1)
             await asyncio.sleep(0.02)
 
@@ -234,7 +234,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             positions_list.append(positions)
             velocities_list.append(velocities)
             tais.append(tai)
-            curr_tai = salobj.current_tai()
+            curr_tai = utils.current_tai()
             self.assertAlmostEqual(curr_tai + advance_time, tai, delta=0.1)
             await asyncio.sleep(0.1)
 
