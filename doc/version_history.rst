@@ -6,8 +6,19 @@
 Version History
 ###############
 
+v2.2.3
+------
+
+* Use ts_utils instead of ts_salobj.
+* Add type annotations and run mypy.
+* Add a Jenkinsfile.
+
+Requires:
+
+* ts_utils 1
+
 v2.2.2
-======
+------
 
 * Use `unittest.IsolatedAsyncioTestCase` instead of the abandoned asynctest package.
 * Modernize doc/conf.py for documenteer 0.6.
@@ -18,7 +29,7 @@ Requires:
 * ts_salobj 6
 
 v2.2.1
-======
+------
 
 Changes:
 
@@ -29,7 +40,7 @@ Requires:
 * ts_salobj 6
 
 v2.2.0
-======
+------
 
 Changes:
 
@@ -41,7 +52,7 @@ Requires:
 * ts_salobj 6
 
 v2.1.1
-======
+------
 
 Changes:
 
@@ -53,7 +64,7 @@ Requires:
 * ts_salobj 5.15 or 6
 
 v2.1.0
-======
+------
 
 Changes:
 
@@ -65,7 +76,7 @@ Requires:
 * ts_salobj 5.15 or 6
 
 v2.0.0
-======
+------
 
 Breaking changes:
 
@@ -94,7 +105,7 @@ Requires:
 * ts_salobj 5.15
 
 v1.0.1
-======
+------
 
 Changes:
 
@@ -108,7 +119,7 @@ Requires:
 * ts_salobj 5.11
 
 v1.0.0
-======
+------
 
 Changes:
 
@@ -120,7 +131,7 @@ Requires:
 * ts_salobj 5
 
 v0.2.1
-======
+------
 
 Add setuptools and conda build compatibility.
 
@@ -129,7 +140,7 @@ Requires:
 * ts_salobj 5
 
 v0.2.0
-======
+------
 
 Additional cleanups that I forgot to make for the first version, plus fixing a bug in slew.py.
 
@@ -138,7 +149,7 @@ Requires:
 * ts_salobj 5
 
 v0.1.0
-======
+------
 
 First release.
 
