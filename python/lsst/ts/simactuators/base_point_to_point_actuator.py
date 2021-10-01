@@ -21,6 +21,8 @@
 
 __all__ = ["BasePointToPointActuator"]
 
+import typing
+
 from lsst.ts import utils
 from . import base
 
@@ -55,7 +57,7 @@ class BasePointToPointActuator:
     as it can eliminate the need to wait for an actuator to move.
     """
 
-    def __init__(self, start_position, speed):
+    def __init__(self, start_position: float, speed: float) -> None:
         if speed <= 0:
             raise ValueError(f"speed={speed} must be positive")
 
@@ -73,7 +75,7 @@ class BasePointToPointActuator:
         self._end_tai = self._start_tai
 
     @property
-    def direction(self):
+    def direction(self) -> base.Direction:
         """Direction of current or most recent move, as a
         `lsst.ts.simactuators.Direction` enum value.
 
@@ -88,26 +90,26 @@ class BasePointToPointActuator:
         )
 
     @property
-    def end_position(self):
+    def end_position(self) -> float:
         """Ending position of move."""
         return self._end_position
 
     @property
-    def end_tai(self):
+    def end_tai(self) -> float:
         """TAI date at end of move, unix seconds."""
         return self._end_tai
 
     @property
-    def start_position(self):
+    def start_position(self) -> float:
         """Starting position of move."""
         return self._start_position
 
     @property
-    def start_tai(self):
+    def start_tai(self) -> float:
         """TAI date at start of move move recent move."""
         return self._start_tai
 
-    def remaining_time(self, tai=None):
+    def remaining_time(self, tai: typing.Optional[float] = None) -> float:
         """Remaining time for the move (seconds); 0 after the move.
 
         Parameters
@@ -119,7 +121,7 @@ class BasePointToPointActuator:
             tai = utils.current_tai()
         return max(0, self.end_tai - tai)
 
-    def moving(self, tai=None):
+    def moving(self, tai: typing.Optional[float] = None) -> bool:
         """Is the axis moving? False before and after the move.
 
         Parameters
@@ -131,7 +133,7 @@ class BasePointToPointActuator:
             tai = utils.current_tai()
         return self.start_tai < tai < self.end_tai
 
-    def position(self, tai=None):
+    def position(self, tai: typing.Optional[float] = None) -> float:
         """Actual position.
 
         Parameters
@@ -148,7 +150,7 @@ class BasePointToPointActuator:
         rem_time = self.end_tai - tai
         return self._end_position - self.direction * self.speed * rem_time
 
-    def velocity(self, tai=None):
+    def velocity(self, tai: typing.Optional[float] = None) -> float:
         """Actual velocity.
 
         Parameters
@@ -162,7 +164,7 @@ class BasePointToPointActuator:
             return 0
         return self.speed * self.direction
 
-    def stop(self, tai=None):
+    def stop(self, tai: typing.Optional[float] = None) -> None:
         """Stop motion instantly.
 
         Set end_position to the current position,
@@ -178,7 +180,9 @@ class BasePointToPointActuator:
         self._end_position = self.position(tai)
         self._end_tai = tai
 
-    def _set_position(self, start_position, start_tai, end_position):
+    def _set_position(
+        self, start_position: float, start_tai: float, end_position: float
+    ) -> float:
         """Set start and end positions and times and return move duration."""
         self._start_position = start_position
         self._start_tai = start_tai

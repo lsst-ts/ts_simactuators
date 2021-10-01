@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # This file is part of ts_simactuators.
 #
 # Developed for the Rubin Observatory Telescope and Site System.
@@ -21,8 +23,10 @@
 
 __all__ = ["TrackingActuator"]
 
+import typing
+
 from lsst.ts import utils
-from . import path
+from . import path as path_m
 
 
 class TrackingActuator:
@@ -71,23 +75,23 @@ class TrackingActuator:
     -----
     Attributes:
 
-    * ``target``: target set by `set_target` (a `path.PathSegment`).
-    * ``path``: actual actuator path (a `path.Path`).
+    * ``target``: target set by `set_target` (a `PathSegment`).
+    * ``path``: actual actuator path (a `Path`).
     """
 
-    Kind = path.Kind
+    Kind = path_m.Kind
 
     def __init__(
         self,
-        min_position,
-        max_position,
-        max_velocity,
-        max_acceleration,
-        dtmax_track,
-        nsettle=2,
-        tai=None,
-        start_position=None,
-    ):
+        min_position: float,
+        max_position: float,
+        max_velocity: float,
+        max_acceleration: float,
+        dtmax_track: float,
+        nsettle: int = 2,
+        tai: typing.Optional[float] = None,
+        start_position: typing.Optional[float] = None,
+    ) -> None:
         if min_position >= max_position:
             raise ValueError(
                 f"min_position={min_position} must be < max_position={max_position}"
@@ -118,13 +122,13 @@ class TrackingActuator:
 
         if tai is None:
             tai = utils.current_tai()
-        self.target = path.PathSegment(tai=tai, position=start_position)
-        self.path = path.Path(
-            path.PathSegment(tai=tai, position=start_position), kind=self.Kind.Stopped
+        self.target = path_m.PathSegment(tai=tai, position=start_position)
+        self.path = path_m.Path(
+            path_m.PathSegment(tai=tai, position=start_position), kind=self.Kind.Stopped
         )
         self._ntrack = 0
 
-    def set_target(self, tai, position, velocity):
+    def set_target(self, tai: float, position: float, velocity: float) -> None:
         """Set the target position, velocity and time.
 
         The actuator will track, if possible, else slew to match the specified
@@ -157,23 +161,23 @@ class TrackingActuator:
           and acceleration limits.
         """
         new_path = self._compute_path(tai=tai, position=position, velocity=velocity)
-        self.target = path.PathSegment(tai=tai, position=position, velocity=velocity)
+        self.target = path_m.PathSegment(tai=tai, position=position, velocity=velocity)
         self.path = new_path
 
     @property
-    def path(self):
+    def path(self) -> path_m.Path:
         """Get or set the actuator path, a `path.Path`."""
         return self._path
 
     @path.setter
-    def path(self, path):
+    def path(self, path: path_m.Path) -> None:
         self._path = path
         if path.kind == self.Kind.Tracking:
             self._ntrack += 1
         else:
             self._ntrack = 0
 
-    def stop(self, tai=None):
+    def stop(self, tai: typing.Optional[float] = None) -> None:
         """Stop the axis using maximum acceleration.
 
         Update the commanded position to match the end point of the stop.
@@ -189,7 +193,7 @@ class TrackingActuator:
         if tai is None:
             tai = utils.current_tai()
         curr_segment = self.path.at(tai)
-        self.path = path.stop(
+        self.path = path_m.stop(
             tai=tai,
             position=curr_segment.position,
             velocity=curr_segment.velocity,
@@ -197,7 +201,11 @@ class TrackingActuator:
         )
         self.target = self.path[-1]
 
-    def abort(self, tai=None, position=None):
+    def abort(
+        self,
+        tai: typing.Optional[float] = None,
+        position: typing.Optional[float] = None,
+    ) -> None:
         """Stop motion immediately, with infinite acceleration.
 
         Do not change the commanded position.
@@ -217,11 +225,11 @@ class TrackingActuator:
             tai = utils.current_tai()
         if position is None:
             position = self.path.at(tai).position
-        self.path = path.Path(
-            path.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped
+        self.path = path_m.Path(
+            path_m.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped
         )
 
-    def kind(self, tai=None):
+    def kind(self, tai: typing.Optional[float] = None) -> path_m.Kind:
         """Kind of path at the specified time.
 
         Parameters
@@ -250,7 +258,9 @@ class TrackingActuator:
             return self.Kind.Stopped
         return self.path.kind
 
-    def _compute_path(self, tai, position, velocity):
+    def _compute_path(
+        self, tai: float, position: float, velocity: float
+    ) -> path_m.Path:
         """Compute a trajectory path to the specified target position,
         velocity and time.
 
@@ -281,7 +291,7 @@ class TrackingActuator:
         if dt < self.dtmax_track:
             # Try tracking.
             prev_segment = self.path.at(prev_tai)
-            tracking_segment = path.PathSegment.from_end_conditions(
+            tracking_segment = path_m.PathSegment.from_end_conditions(
                 start_tai=prev_tai,
                 start_position=prev_segment.position,
                 start_velocity=prev_segment.velocity,
@@ -297,16 +307,16 @@ class TrackingActuator:
                 and limits.max_position <= self.max_position
             ):
                 # Tracking works.
-                newcurr = path.Path(
+                newcurr = path_m.Path(
                     tracking_segment,
-                    path.PathSegment(tai=tai, position=position, velocity=velocity),
+                    path_m.PathSegment(tai=tai, position=position, velocity=velocity),
                     kind=self.Kind.Tracking,
                 )
 
         if newcurr is None:
             # Tracking didn't work, so slew.
             curr_segment = self.path.at(tai)
-            newcurr = path.slew(
+            newcurr = path_m.slew(
                 tai=tai,
                 start_position=curr_segment.position,
                 start_velocity=curr_segment.velocity,

@@ -27,7 +27,7 @@ from lsst.ts import simactuators
 
 
 class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         min_position = -1
         max_position = 5
         start_position = 3
@@ -102,7 +102,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
                         speed=bad_speed,
                     )
 
-    async def test_set_position(self):
+    async def test_set_position(self) -> None:
         await self.check_set_position(start_position=3, end_position=4)
         await self.check_set_position(start_position=2, end_position=-5)
 
@@ -130,7 +130,9 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         actuator.set_position(position=1, start_tai=start_tai)
         self.assertEqual(actuator.start_tai, start_tai)
 
-    async def check_set_position(self, start_position, end_position):
+    async def check_set_position(
+        self, start_position: float, end_position: float
+    ) -> None:
         if start_position == end_position:
             raise ValueError("start_position must not equal end_position")
         min_position = min(start_position, end_position) - 1
@@ -208,7 +210,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):
                 actuator.set_position(bad_end_position)
 
-    async def test_stop_default_tai(self):
+    async def test_stop_default_tai(self) -> None:
         min_position = -10
         max_position = 10
         start_position = 3
@@ -261,7 +263,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(actuator.end_position, old_pos)
         self.assertAlmostEqual(actuator.end_tai, tai0, delta=time_slop)
 
-    async def test_stop_specified_tai(self):
+    async def test_stop_specified_tai(self) -> None:
         min_position = -10
         max_position = 10
         start_position = 3
@@ -301,7 +303,3 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(actuator.end_tai, stop_tai)
         predicted_end_position = start_position + speed * stop_dtime
         self.assertAlmostEqual(actuator.end_position, predicted_end_position)
-
-
-if __name__ == "__main__":
-    unittest.main()

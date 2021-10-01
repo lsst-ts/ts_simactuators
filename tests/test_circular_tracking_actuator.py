@@ -27,7 +27,7 @@ from lsst.ts import simactuators
 
 
 class TestCircularTrackingActuator(unittest.TestCase):
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         max_velocity = 3
         max_acceleration = 4
         dtmax_track = 0.5
@@ -71,7 +71,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
             self.assertAlmostEqual(actuator.path[-1].position, expected_start_position)
             self.assertAlmostEqual(actuator.target.position, expected_start_position)
 
-    def test_constructor_errors(self):
+    def test_constructor_errors(self) -> None:
         max_velocity = 3
         max_acceleration = 4
         dtmax_track = 0.5
@@ -104,7 +104,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
                 dtmax_track=dtmax_track,
             )
 
-    def test_set_target(self):
+    def test_set_target(self) -> None:
         for (
             start_position,
             end_position,
@@ -126,7 +126,11 @@ class TestCircularTrackingActuator(unittest.TestCase):
             )
             self.check_set_target(start_segment=start_segment, end_segment=end_segment)
 
-    def check_set_target(self, start_segment, end_segment):
+    def check_set_target(
+        self,
+        start_segment: simactuators.path.PathSegment,
+        end_segment: simactuators.path.PathSegment,
+    ) -> None:
         self.assertGreater(end_segment.tai, start_segment.tai)
         max_velocity = 3
         max_acceleration = 4

@@ -22,6 +22,7 @@
 __all__ = ["CircularTrackingActuator"]
 
 import math
+import typing
 
 from lsst.ts import utils
 from . import base
@@ -77,12 +78,12 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
 
     def __init__(
         self,
-        max_velocity,
-        max_acceleration,
-        dtmax_track,
-        nsettle=2,
-        tai=None,
-        start_position=None,
+        max_velocity: float,
+        max_acceleration: float,
+        dtmax_track: float,
+        nsettle: int = 2,
+        tai: typing.Optional[float] = None,
+        start_position: typing.Optional[float] = None,
     ):
         if start_position is None:
             wrapped_start_position = 0
@@ -99,7 +100,13 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
             start_position=wrapped_start_position,
         )
 
-    def set_target(self, tai, position, velocity, direction=base.Direction.NEAREST):
+    def set_target(
+        self,
+        tai: float,
+        position: float,
+        velocity: float,
+        direction: base.Direction = base.Direction.NEAREST,
+    ) -> None:
         """Set the target position, velocity and time.
 
         The actuator will track, if possible, else slew to match the specified
@@ -144,7 +151,9 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
         )
         self.path = new_path
 
-    def _compute_directed_path(self, tai, position, velocity, direction):
+    def _compute_directed_path(
+        self, tai: float, position: float, velocity: float, direction: base.Direction
+    ) -> path.Path:
         """Compute a path to a target.
 
         Parameters

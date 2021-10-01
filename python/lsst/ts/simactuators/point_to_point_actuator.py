@@ -21,6 +21,8 @@
 
 __all__ = ["PointToPointActuator"]
 
+import typing
+
 from lsst.ts import utils
 from . import base_point_to_point_actuator
 
@@ -50,7 +52,13 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
         or start_position > max_position.
     """
 
-    def __init__(self, min_position, max_position, speed, start_position=None):
+    def __init__(
+        self,
+        min_position: float,
+        max_position: float,
+        speed: float,
+        start_position: typing.Optional[float] = None,
+    ) -> None:
         if min_position >= max_position:
             raise ValueError(
                 f"min_position={min_position} must be < max_position={max_position}"
@@ -70,7 +78,9 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
         self.max_position = max_position
         super().__init__(start_position=start_position, speed=speed)
 
-    def set_position(self, position, start_tai=None):
+    def set_position(
+        self, position: float, start_tai: typing.Optional[float] = None
+    ) -> float:
         """Set a new target position and return the move duration.
 
         Parameters

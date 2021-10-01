@@ -33,14 +33,14 @@ SLEW_FUDGE = 1.05
 
 
 def slew(
-    tai,
-    start_position,
-    start_velocity,
-    end_position,
-    end_velocity,
-    max_velocity,
-    max_acceleration,
-):
+    tai: float,
+    start_position: float,
+    start_velocity: float,
+    end_position: float,
+    end_velocity: float,
+    max_velocity: float,
+    max_acceleration: float,
+) -> path.Path:
     """Compute a trapezoidal slew from a start path of constant velocity
     to and end path of constant velocity.
 
@@ -195,7 +195,7 @@ def slew(
     # first assume that dt2 = 0 and compute vel_mid;
     # if resulting vel_mid is too big, reduce it to maximum allowed
     # and compute corresponding increased dt2.
-    dt2 = 0
+    dt2 = 0.0
     vPB_temp = (
         (0.5 * start_accel * dt2) ** 2 + half_end_velocityAsq + start_accel * dpBAi
     )

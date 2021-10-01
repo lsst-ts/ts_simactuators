@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+import typing
 import unittest
 
 from lsst.ts import utils
@@ -27,7 +28,7 @@ from lsst.ts import simactuators
 
 
 class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         speed = 1.5
         for start_position in (-360, -180, -1, 0, 359.99, 360):
             tai0 = utils.current_tai()
@@ -62,7 +63,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
                         speed=bad_speed,
                     )
 
-    async def test_set_position(self):
+    async def test_set_position(self) -> None:
         directions = list(simactuators.Direction) + [None]
         tai = utils.current_tai()
         for direction in directions:
@@ -106,7 +107,9 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             actuator.set_position(position=1, start_tai=start_tai, **kwargs)
             self.assertEqual(actuator.start_tai, start_tai)
 
-    async def check_set_position(self, start_position, end_position, **kwargs):
+    async def check_set_position(
+        self, start_position: float, end_position: float, **kwargs: typing.Any
+    ) -> None:
         """Check the set_position command.
 
         Unlike `CircularPointToPointActuator`, direction=None is allowed
@@ -185,7 +188,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(actuator.moving(tai))
             self.assertEqual(actuator.velocity(tai), predicted_speed)
 
-    async def test_stop(self):
+    async def test_stop(self) -> None:
         # Pick start and end positions that will not wrap
         # so we can use assertEqual where appropriate.
         start_position = 3
