@@ -21,7 +21,9 @@
 
 __all__ = ["BasePointToPointActuator"]
 
-from lsst.ts import salobj
+import typing
+
+from lsst.ts import utils
 from . import base
 
 
@@ -55,7 +57,7 @@ class BasePointToPointActuator:
     as it can eliminate the need to wait for an actuator to move.
     """
 
-    def __init__(self, start_position, speed):
+    def __init__(self, start_position: float, speed: float) -> None:
         if speed <= 0:
             raise ValueError(f"speed={speed} must be positive")
 
@@ -66,14 +68,14 @@ class BasePointToPointActuator:
         # End position of a move; the current position if not moving.
         self._end_position = start_position
         # Start time of move.
-        self._start_tai = salobj.current_tai()
+        self._start_tai = utils.current_tai()
         # End time of move. Record this, rather than computing it on demand,
         # because it allows a user to change the speed without altering
         # the end time.
         self._end_tai = self._start_tai
 
     @property
-    def direction(self):
+    def direction(self) -> base.Direction:
         """Direction of current or most recent move, as a
         `lsst.ts.simactuators.Direction` enum value.
 
@@ -88,26 +90,26 @@ class BasePointToPointActuator:
         )
 
     @property
-    def end_position(self):
+    def end_position(self) -> float:
         """Ending position of move."""
         return self._end_position
 
     @property
-    def end_tai(self):
+    def end_tai(self) -> float:
         """TAI date at end of move, unix seconds."""
         return self._end_tai
 
     @property
-    def start_position(self):
+    def start_position(self) -> float:
         """Starting position of move."""
         return self._start_position
 
     @property
-    def start_tai(self):
+    def start_tai(self) -> float:
         """TAI date at start of move move recent move."""
         return self._start_tai
 
-    def remaining_time(self, tai=None):
+    def remaining_time(self, tai: typing.Optional[float] = None) -> float:
         """Remaining time for the move (seconds); 0 after the move.
 
         Parameters
@@ -116,10 +118,10 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         return max(0, self.end_tai - tai)
 
-    def moving(self, tai=None):
+    def moving(self, tai: typing.Optional[float] = None) -> bool:
         """Is the axis moving? False before and after the move.
 
         Parameters
@@ -128,10 +130,10 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         return self.start_tai < tai < self.end_tai
 
-    def position(self, tai=None):
+    def position(self, tai: typing.Optional[float] = None) -> float:
         """Actual position.
 
         Parameters
@@ -140,7 +142,7 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         if tai > self.end_tai:
             return self.end_position
         elif tai < self.start_tai:
@@ -148,7 +150,7 @@ class BasePointToPointActuator:
         rem_time = self.end_tai - tai
         return self._end_position - self.direction * self.speed * rem_time
 
-    def velocity(self, tai=None):
+    def velocity(self, tai: typing.Optional[float] = None) -> float:
         """Actual velocity.
 
         Parameters
@@ -157,12 +159,12 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         if not self.moving(tai):
             return 0
         return self.speed * self.direction
 
-    def stop(self, tai=None):
+    def stop(self, tai: typing.Optional[float] = None) -> None:
         """Stop motion instantly.
 
         Set end_position to the current position,
@@ -174,11 +176,13 @@ class BasePointToPointActuator:
             TAI date, unix seconds. Current time if `None`.
         """
         if tai is None:
-            tai = salobj.current_tai()
+            tai = utils.current_tai()
         self._end_position = self.position(tai)
         self._end_tai = tai
 
-    def _set_position(self, start_position, start_tai, end_position):
+    def _set_position(
+        self, start_position: float, start_tai: float, end_position: float
+    ) -> float:
         """Set start and end positions and times and return move duration."""
         self._start_position = start_position
         self._start_tai = start_tai

@@ -25,12 +25,12 @@ import unittest
 
 import numpy as np
 
-from lsst.ts import salobj
+from lsst.ts import utils
 from lsst.ts import simactuators
 
 
 class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
-    def test_cosine_generator_constructor_errors(self):
+    def test_cosine_generator_constructor_errors(self) -> None:
         center_positions = [1, -2, 3.3]
         amplitudes = [-2.1, 0, 1.2]
         max_speeds = [1, 0, -1]  # Check that sign is ignored
@@ -65,7 +65,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
                 max_speeds=[0, 0, 0],  # Zero speed for nonzero amplitude
             )
 
-    def test_ramp_generator_constructor_errors(self):
+    def test_ramp_generator_constructor_errors(self) -> None:
         start_positions = [1, -2, 3.3]
         end_positions = [-3, -2, 4.1]
         speeds = [1, 0, -1]  # Check that sign is ignored
@@ -100,7 +100,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
                 speeds=[0, 0, 0],  # Zero speed for nonzero delta
             )
 
-    async def test_cosine_generator_path(self):
+    async def test_cosine_generator_path(self) -> None:
         center_positions = [1, -2, 3.3]
         amplitudes = [-1, 0, 1.1]
         max_speeds = [-2.2, 0, 2.1]  # Use the correct sign to simplify testing
@@ -112,7 +112,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
         predicted_durations = []
         for i in range(3):
             if amplitudes[i] == 0:
-                duration = 0
+                duration = 0.0
             else:
                 duration = abs(amplitudes[i] * 2 * math.pi / max_speeds[i])
             predicted_durations.append(duration)
@@ -135,7 +135,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             positions_list.append(positions)
             velocities_list.append(velocities)
             tais.append(tai)
-            curr_tai = salobj.current_tai()
+            curr_tai = utils.current_tai()
             self.assertAlmostEqual(curr_tai + advance_time, tai, delta=0.1)
             await asyncio.sleep(0.02)
 
@@ -200,7 +200,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(np.all(positions_list[-nextra - 1] == 0))
         self.assertFalse(np.all(velocities_list[-nextra - 1] == 0))
 
-    async def test_ramp_generator_path(self):
+    async def test_ramp_generator_path(self) -> None:
         start_positions = [1, -2, 3.3]
         end_positions = [-3, -2, 5.1]
         speeds = [-2.2, 0, 1]  # Use the correct sign to simplify testing
@@ -211,7 +211,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
         for i in range(3):
             dpos = end_positions[i] - start_positions[i]
             if dpos == 0:
-                duration = 0
+                duration = 0.0
             else:
                 duration = abs(dpos / speeds[i])
             predicted_durations.append(duration)
@@ -234,7 +234,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             positions_list.append(positions)
             velocities_list.append(velocities)
             tais.append(tai)
-            curr_tai = salobj.current_tai()
+            curr_tai = utils.current_tai()
             self.assertAlmostEqual(curr_tai + advance_time, tai, delta=0.1)
             await asyncio.sleep(0.1)
 
@@ -263,7 +263,3 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
 
         self.assertFalse(np.all(positions_list[-nextra - 1] == 0))
         self.assertFalse(np.all(velocities_list[-nextra - 1] == 0))
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -21,7 +21,9 @@
 
 __all__ = ["CircularPointToPointActuator"]
 
-from lsst.ts import salobj
+import typing
+
+from lsst.ts import utils
 from . import base
 from . import base_point_to_point_actuator
 
@@ -49,7 +51,9 @@ class CircularPointToPointActuator(
         If ``speed <= 0``
     """
 
-    def __init__(self, speed, start_position=None):
+    def __init__(
+        self, speed: float, start_position: typing.Optional[float] = None
+    ) -> None:
         # The private fields _start_position and _end_position are not
         # necessarily in the range [0, 360). This is important for supporting
         # the ``direction`` parameter. The public accessors all wrap
@@ -57,21 +61,21 @@ class CircularPointToPointActuator(
         if start_position is None:
             start_position = 0
         super().__init__(
-            start_position=salobj.angle_wrap_nonnegative(start_position).deg,
+            start_position=utils.angle_wrap_nonnegative(start_position).deg,
             speed=speed,
         )
 
     @property
-    def start_position(self):
+    def start_position(self) -> float:
         """Starting position of move in the range [0, 360) degrees."""
-        return salobj.angle_wrap_nonnegative(self._start_position).deg
+        return utils.angle_wrap_nonnegative(self._start_position).deg
 
     @property
-    def end_position(self):
+    def end_position(self) -> float:
         """Ending position of move, in the range [0, 360) degrees."""
-        return salobj.angle_wrap_nonnegative(self._end_position).deg
+        return utils.angle_wrap_nonnegative(self._end_position).deg
 
-    def position(self, tai=None):
+    def position(self, tai: typing.Optional[float] = None) -> float:
         """Current position.
 
         Parameters
@@ -79,9 +83,14 @@ class CircularPointToPointActuator(
         tai : `float` or `None`, optional
             TAI date, unix seconds. Current time if `None`.
         """
-        return salobj.angle_wrap_nonnegative(super().position(tai)).deg
+        return utils.angle_wrap_nonnegative(super().position(tai)).deg
 
-    def set_position(self, position, direction=base.Direction.NEAREST, start_tai=None):
+    def set_position(
+        self,
+        position: float,
+        direction: base.Direction = base.Direction.NEAREST,
+        start_tai: typing.Optional[float] = None,
+    ) -> float:
         """Set a new target position and return the move duration.
 
         Parameters
@@ -96,9 +105,9 @@ class CircularPointToPointActuator(
         """
         direction = base.Direction(direction)
         if start_tai is None:
-            start_tai = salobj.current_tai()
-        start_position = salobj.angle_wrap_nonnegative(self.position(start_tai)).deg
-        delta = salobj.angle_diff(position, start_position).deg
+            start_tai = utils.current_tai()
+        start_position = utils.angle_wrap_nonnegative(self.position(start_tai)).deg
+        delta = utils.angle_diff(position, start_position).deg
         if direction is base.Direction.POSITIVE:
             if delta < 0:
                 delta += 360

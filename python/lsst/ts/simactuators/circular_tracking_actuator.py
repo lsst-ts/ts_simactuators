@@ -22,9 +22,9 @@
 __all__ = ["CircularTrackingActuator"]
 
 import math
+import typing
 
-from lsst.ts import salobj
-
+from lsst.ts import utils
 from . import base
 from . import path
 from . import tracking_actuator
@@ -51,7 +51,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
         before ``self.kind(tai)`` reports tracking instead of slewing.
     tai : `float`, optional
         TAI time for ``self.target`` and ``self.path``
-        (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        (unix seconds, e.g. from lsst.ts.utils.current_tai()).
         If None then use current TAI.
         This is primarily for unit tests; None is usually what you want.
     start_position : `float` or `None`, optional
@@ -78,17 +78,17 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
 
     def __init__(
         self,
-        max_velocity,
-        max_acceleration,
-        dtmax_track,
-        nsettle=2,
-        tai=None,
-        start_position=None,
+        max_velocity: float,
+        max_acceleration: float,
+        dtmax_track: float,
+        nsettle: int = 2,
+        tai: typing.Optional[float] = None,
+        start_position: typing.Optional[float] = None,
     ):
         if start_position is None:
             wrapped_start_position = 0
         else:
-            wrapped_start_position = salobj.angle_wrap_nonnegative(start_position).deg
+            wrapped_start_position = utils.angle_wrap_nonnegative(start_position).deg
         super().__init__(
             min_position=-math.inf,
             max_position=math.inf,
@@ -100,7 +100,13 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
             start_position=wrapped_start_position,
         )
 
-    def set_target(self, tai, position, velocity, direction=base.Direction.NEAREST):
+    def set_target(
+        self,
+        tai: float,
+        position: float,
+        velocity: float,
+        direction: base.Direction = base.Direction.NEAREST,
+    ) -> None:
         """Set the target position, velocity and time.
 
         The actuator will track, if possible, else slew to match the specified
@@ -111,7 +117,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
         position : `float`
             Position (deg)
         velocity : `float`
@@ -136,7 +142,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
           the previous call to `set_target`.
         * The tracking segment path obeys the velocity and acceleration limits.
         """
-        wrapped_position = salobj.angle_wrap_nonnegative(position).deg
+        wrapped_position = utils.angle_wrap_nonnegative(position).deg
         new_path = self._compute_directed_path(
             tai=tai, position=wrapped_position, velocity=velocity, direction=direction
         )
@@ -145,13 +151,15 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
         )
         self.path = new_path
 
-    def _compute_directed_path(self, tai, position, velocity, direction):
+    def _compute_directed_path(
+        self, tai: float, position: float, velocity: float, direction: base.Direction
+    ) -> path.Path:
         """Compute a path to a target.
 
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
         position : `float`
             Position (deg)
         velocity : `float`
@@ -163,7 +171,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
             (velocit is ignored, to simplify the code).
         """
         current_position = self.path.at(tai).position
-        delta_position = salobj.angle_diff(position, current_position).deg
+        delta_position = utils.angle_diff(position, current_position).deg
 
         # wrapped_position is the target position wrapped to be
         # the appropriate delta from the current position
