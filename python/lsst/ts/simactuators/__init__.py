@@ -19,6 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
+if typing.TYPE_CHECKING:
+    __version__ = "?"
+else:
+    try:
+        from .version import *
+    except ImportError:
+        __version__ = "?"
+
 from .base import *
 from .base_point_to_point_actuator import *
 from .circular_point_to_point_actuator import *
@@ -27,8 +37,3 @@ from .tracking_actuator import *
 from .circular_tracking_actuator import *
 from .commander_utils import *
 from . import path
-
-try:
-    from .version import *
-except ImportError:
-    __version__ = "?"
