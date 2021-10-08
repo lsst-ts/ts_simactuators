@@ -31,8 +31,13 @@ from lsst.ts import simactuators
 
 class TestPathSegment(unittest.TestCase):
     def check_from_end_conditions(
-        self, start_position, start_velocity, end_position, end_velocity, dt
-    ):
+        self,
+        start_position: float,
+        start_velocity: float,
+        end_position: float,
+        end_velocity: float,
+        dt: float,
+    ) -> None:
         """Check PathSegment from_end_conditions and limits methods."""
         start_tai = 45.3  # any value will do
         end_tai = start_tai + dt
@@ -81,7 +86,7 @@ class TestPathSegment(unittest.TestCase):
         self.assertAlmostEqual(limits.max_velocity, desired_max_velocity, places=3)
         self.assertAlmostEqual(limits.max_acceleration, desired_max_acceleration)
 
-    def test_from_end_conditions(self):
+    def test_from_end_conditions(self) -> None:
         for (
             start_position,
             start_velocity,
@@ -110,7 +115,7 @@ class TestPathSegment(unittest.TestCase):
                     end_velocity=end_velocity,
                 )
 
-    def test_basics(self):
+    def test_basics(self) -> None:
         tai = 1573847242.4
         position = 5.1
         velocity = 4.3
@@ -159,7 +164,7 @@ class TestPathSegment(unittest.TestCase):
                 self.assertAlmostEqual(new_segment.acceleration, expected_accel)
                 self.assertEqual(new_segment.jerk, jerk)
 
-    def test_default_arguments(self):
+    def test_default_arguments(self) -> None:
         """Test constructing a PathSegment with default arguments."""
         full_kwargs = dict(
             tai=1573847242.4,
@@ -183,7 +188,7 @@ class TestPathSegment(unittest.TestCase):
                             getattr(segment, field_name), full_kwargs[field_name]
                         )
 
-    def test_invalid_inputs(self):
+    def test_invalid_inputs(self) -> None:
         """Test invalid inputs for PathSegment.from_end_conditions.
 
         The only thing that can go wrong is end_tai - start_tai <= 0.
@@ -202,7 +207,3 @@ class TestPathSegment(unittest.TestCase):
                         end_position=1,
                         end_velocity=2,
                     )
-
-
-if __name__ == "__main__":
-    unittest.main()

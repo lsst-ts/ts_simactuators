@@ -25,8 +25,15 @@ import unittest
 from lsst.ts import simactuators
 
 
-class TestStop(unittest.TestCase):
-    def check_path(self, path, tai, position, velocity, max_acceleration):
+class TestStopTestCase(unittest.TestCase):
+    def check_path(
+        self,
+        path: simactuators.path.Path,
+        tai: float,
+        position: float,
+        velocity: float,
+        max_acceleration: float,
+    ) -> None:
         """Check various aspects of a path
 
         Checks the following:
@@ -71,7 +78,7 @@ class TestStop(unittest.TestCase):
             self.assertAlmostEqual(segment1.position, pred_p1, places=4)
             self.assertAlmostEqual(segment1.velocity, pred_v1, places=4)
 
-    def test_slew_to_stop(self):
+    def test_slew_to_stop(self) -> None:
         tai = 1550000000
         max_acceleration = 10
 
@@ -96,7 +103,7 @@ class TestStop(unittest.TestCase):
                     max_acceleration=max_acceleration,
                 )
 
-    def test_already_stopped(self):
+    def test_already_stopped(self) -> None:
         """Test stop when already stopped."""
         # Arbitrary but reasonable values
         tai = 1550000000
@@ -119,7 +126,7 @@ class TestStop(unittest.TestCase):
                 max_acceleration=max_acceleration,
             )
 
-    def test_invalid_inputs(self):
+    def test_invalid_inputs(self) -> None:
         # Arbitrary but reasonable values
         tai = 1530000000
         position = 1
@@ -134,7 +141,3 @@ class TestStop(unittest.TestCase):
             simactuators.path.stop(
                 tai=tai, position=position, velocity=velocity, max_acceleration=-1
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

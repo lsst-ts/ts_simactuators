@@ -29,15 +29,15 @@ from lsst.ts import simactuators
 class TestSlew(unittest.TestCase):
     def check_path(
         self,
-        path,
-        tai,
-        start_position,
-        start_velocity,
-        end_position,
-        end_velocity,
-        max_velocity,
-        max_acceleration,
-    ):
+        path: simactuators.path.Path,
+        tai: float,
+        start_position: float,
+        start_velocity: float,
+        end_position: float,
+        end_velocity: float,
+        max_velocity: float,
+        max_acceleration: float,
+    ) -> None:
         """Check various aspects of a path created by `slew`.
 
         Parameters
@@ -92,7 +92,7 @@ class TestSlew(unittest.TestCase):
             self.assertLessEqual(abs(segment.velocity), max_velocity)
             self.assertLessEqual(abs(segment.acceleration), max_acceleration)
 
-    def test_no_slew(self):
+    def test_no_slew(self) -> None:
         """Test moving from a point to itself (no slew needed)."""
         # Arbitrary but reasonable values
         tai = 1550000000
@@ -129,7 +129,7 @@ class TestSlew(unittest.TestCase):
                 self.assertEqual(len(path), 1)
                 self.assertAlmostEqual(path[0].acceleration, 0)
 
-    def test_long_fixed_points(self):
+    def test_long_fixed_points(self) -> None:
         """Test a fixed point to fixed point slew that is long enough
         to have a segment with constant velocity=+/-max_velocity
 
@@ -209,7 +209,7 @@ class TestSlew(unittest.TestCase):
                 self.assertAlmostEqual(path[3].velocity, 0)
                 self.assertAlmostEqual(path[3].acceleration, 0)
 
-    def test_short_fixed_points(self):
+    def test_short_fixed_points(self) -> None:
         """Test a fixed point to fixed point slew that is long enough
         to have a segment with constant velocity=+/-max_velocity
 
@@ -276,7 +276,7 @@ class TestSlew(unittest.TestCase):
                 self.assertAlmostEqual(path[2].velocity, 0)
                 self.assertAlmostEqual(path[2].acceleration, 0)
 
-    def test_other_slews(self):
+    def test_other_slews(self) -> None:
         # Arbitrary but reasonable values
         tai = 1560000000
         max_velocity = 3.1
@@ -320,7 +320,7 @@ class TestSlew(unittest.TestCase):
                     max_acceleration=max_acceleration,
                 )
 
-    def test_invalid_inputs(self):
+    def test_invalid_inputs(self) -> None:
         # Arbitrary but reasonable values
         tai = 1530000000
         max_velocity = 3.1
@@ -410,7 +410,3 @@ class TestSlew(unittest.TestCase):
                     max_velocity=max_velocity,
                     max_acceleration=max_acceleration,
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()

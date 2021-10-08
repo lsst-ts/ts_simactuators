@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # This file is part of ts_simactuators.
 #
 # Developed for the Rubin Observatory Telescope and Site System.
@@ -21,6 +23,7 @@
 
 import math
 import sys
+import typing
 
 __all__ = ["MotionLimits", "PathSegment"]
 
@@ -40,7 +43,13 @@ class MotionLimits:
         Maximum absolute value of acceleration (deg/sec/sec)
     """
 
-    def __init__(self, min_position, max_position, max_velocity, max_acceleration):
+    def __init__(
+        self,
+        min_position: float,
+        max_position: float,
+        max_velocity: float,
+        max_acceleration: float,
+    ) -> None:
         self.min_position = min_position
         self.max_position = max_position
         self.max_velocity = max_velocity
@@ -53,7 +62,7 @@ class PathSegment:
     Parameters
     ----------
     tai : `float`
-        TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
     position : `float` at time ``tai``, optional
         Position (deg)
     velocity : `float` at time ``tai``, optional
@@ -64,7 +73,14 @@ class PathSegment:
         Jerk (deg/sec^3)
     """
 
-    def __init__(self, tai, position=0, velocity=0, acceleration=0, jerk=0):
+    def __init__(
+        self,
+        tai: float,
+        position: float = 0,
+        velocity: float = 0,
+        acceleration: float = 0,
+        jerk: float = 0,
+    ) -> None:
         self.tai = float(tai)
         self.position = float(position)
         self.velocity = float(velocity)
@@ -74,13 +90,13 @@ class PathSegment:
     @classmethod
     def from_end_conditions(
         cls,
-        start_tai,
-        start_position,
-        start_velocity,
-        end_tai,
-        end_position,
-        end_velocity,
-    ):
+        start_tai: float,
+        start_position: float,
+        start_velocity: float,
+        end_tai: float,
+        end_position: float,
+        end_velocity: float,
+    ) -> PathSegment:
         """Create a path segment that connects two paths of constant
         velocity.
 
@@ -88,14 +104,14 @@ class PathSegment:
         ----------
         start_tai : `float`
             TAI time for start path (unix seconds, e.g. from
-            lsst.ts.salobj.current_tai()).
+            lsst.ts.utils.current_tai()).
         start_position : `float`, optional
             Position at ``start_tai`` (deg)
         start_velocity : `float`, optional
             Velocity at ``start_tai`` (deg/sec)
         end_tai : `float`
             TAI time for end path (unix seconds,
-            e.g. from lsst.ts.salobj.current_tai()).
+            e.g. from lsst.ts.utils.current_tai()).
         end_position : `float`, optional
             Position at ``end_tai`` (deg)
         end_velocity : `float`, optional
@@ -125,7 +141,7 @@ class PathSegment:
             jerk=jerk,
         )
 
-    def limits(self, end_tai):
+    def limits(self, end_tai: float) -> MotionLimits:
         """Compute the limits of motion between ``self.tai``
         and a given end time.
 
@@ -133,7 +149,7 @@ class PathSegment:
         ----------
         end_tai : `float`
             End time (TAI unix seconds, e.g. from
-            lsst.ts.salobj.current_tai()).
+            lsst.ts.utils.current_tai()).
 
         Returns
         -------
@@ -167,9 +183,9 @@ class PathSegment:
         max_velocity = max(abs(self.velocity), abs(end_segment.velocity), abs(vex))
         max_acceleration = max(abs(self.acceleration), abs(end_segment.acceleration))
 
-        t_pexArr = [0] * 2
-        numArr = [0] * 2
-        pexArr = [0] * 2
+        t_pexArr: typing.MutableSequence[float] = [0] * 2
+        numArr: typing.MutableSequence[float] = [0] * 2
+        pexArr: typing.MutableSequence[float] = [0] * 2
 
         # Compute the two times t_pexArr,
         # and positions pexArr = p(t_pexArr).
@@ -211,13 +227,13 @@ class PathSegment:
             max_acceleration=max_acceleration,
         )
 
-    def at(self, tai):
+    def at(self, tai: float) -> PathSegment:
         """Return a copy with the specified time.
 
         Parameters
         ----------
         tai : `float`
-            Time (TAI unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            Time (TAI unix seconds, e.g. from lsst.ts.utils.current_tai()).
 
         Returns
         -------
@@ -235,7 +251,7 @@ class PathSegment:
             jerk=self.jerk,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         fields = [f"tai={self.tai}"]
         for name in ("position", "velocity", "acceleration", "jerk"):
             val = getattr(self, name)

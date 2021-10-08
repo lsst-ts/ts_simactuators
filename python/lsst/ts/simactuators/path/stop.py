@@ -27,14 +27,16 @@ from . import path_segment
 from . import path
 
 
-def stop(tai, position, velocity, max_acceleration):
+def stop(
+    tai: float, position: float, velocity: float, max_acceleration: float
+) -> path.Path:
     """Compute a path to stop as quickly as possible,
     starting from a path of constant velocity.
 
     Parameters
     ----------
     tai : `float`
-        TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+        TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
     position : `float`
         Position at time ``tai`` (deg)
     velocity : `float`

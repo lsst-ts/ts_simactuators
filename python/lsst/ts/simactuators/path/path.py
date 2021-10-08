@@ -24,6 +24,8 @@ __all__ = ["Kind", "Path"]
 import bisect
 import enum
 
+from .path_segment import PathSegment
+
 
 class Kind(enum.Enum):
     """Kind of path."""
@@ -51,7 +53,7 @@ class Path:
         or the segments do not have increasing ``tai``.
     """
 
-    def __init__(self, *segments, kind):
+    def __init__(self, *segments: PathSegment, kind: Kind) -> None:
         if len(segments) < 1:
             raise ValueError(f"segments={segments} needs at least one element")
         prev_tai = None
@@ -65,13 +67,13 @@ class Path:
         self.kind = Kind(kind)
         self.tais = [segment.tai for segment in segments]
 
-    def at(self, tai):
+    def at(self, tai: float) -> PathSegment:
         """Compute a path segment at the specified time.
 
         Parameters
         ----------
         tai : `float`
-            TAI time (unix seconds, e.g. from lsst.ts.salobj.current_tai()).
+            TAI time (unix seconds, e.g. from lsst.ts.utils.current_tai()).
 
         Returns
         -------
@@ -83,13 +85,13 @@ class Path:
             ind -= 1
         return self.segments[ind].at(tai)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.segments)
 
-    def __getitem__(self, ind):
+    def __getitem__(self, ind: int) -> PathSegment:
         r"""Indexed access to the `PathSegment`\s that make up the path."""
         return self.segments[ind]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         segments_str = ", ".join(repr(segment) for segment in self.segments[:-1])
         return f"Path({segments_str}, kind={self.kind})"

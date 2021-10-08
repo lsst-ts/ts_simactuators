@@ -21,6 +21,7 @@
 
 import itertools
 import math
+import typing
 import unittest
 
 import numpy as np
@@ -37,7 +38,14 @@ class SinFunctor:
     and vel_ampl = 2 pi ampl / period
     """
 
-    def __init__(self, pos_off, pos_ampl, vel_off, period, start_tai):
+    def __init__(
+        self,
+        pos_off: float,
+        pos_ampl: float,
+        vel_off: float,
+        period: float,
+        start_tai: float,
+    ) -> None:
         assert period > 0
         self.pos_off = pos_off
         self.pos_ampl = pos_ampl
@@ -46,7 +54,7 @@ class SinFunctor:
         self.start_tai = start_tai
         self.vel_ampl = self.pos_ampl * 2 * math.pi / self.period
 
-    def __call__(self, tai):
+    def __call__(self, tai: float) -> typing.Tuple[float, float]:
         """Compute position, velocity at the specified time."""
         dt = tai - self.start_tai
         theta = 2 * math.pi * dt / self.period
@@ -57,7 +65,7 @@ class SinFunctor:
 
 
 class TestTrackingActuator(unittest.TestCase):
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         min_position = -1
         max_position = 2
         max_velocity = 3
@@ -136,7 +144,7 @@ class TestTrackingActuator(unittest.TestCase):
             self.assertAlmostEqual(actuator.path[-1].position, expected_p0)
             self.assertAlmostEqual(actuator.target.position, expected_p0)
 
-    def test_constructor_errors(self):
+    def test_constructor_errors(self) -> None:
         min_position = -1
         max_position = 2
         max_velocity = 3
@@ -211,7 +219,7 @@ class TestTrackingActuator(unittest.TestCase):
                 tai=tai,
             )
 
-    def test_matched_start(self):
+    def test_matched_start(self) -> None:
         """Test slew_cmd for a sine path where initial position and velocity
         for current and target match.
 
@@ -249,7 +257,7 @@ class TestTrackingActuator(unittest.TestCase):
                     max_velocity_err=0.001,
                 )
 
-    def test_mismatched_start(self):
+    def test_mismatched_start(self) -> None:
         """Test slew_cmd for a sine path where initial position and velocity
         for current and target do not match.
 
@@ -292,7 +300,7 @@ class TestTrackingActuator(unittest.TestCase):
                     max_velocity_err=0.001,
                 )
 
-    def test_stop(self):
+    def test_stop(self) -> None:
         for pos_off, vel_off in itertools.product(
             (30, -30),
             (0, 1, -1),
@@ -347,7 +355,7 @@ class TestTrackingActuator(unittest.TestCase):
                     actuator.kind(tai_end_halt + 0.0001), actuator.Kind.Stopped
                 )
 
-    def test_abort(self):
+    def test_abort(self) -> None:
         for pos_off, vel_off in itertools.product(
             (30, -30),
             (0, 1, -1),
@@ -390,21 +398,21 @@ class TestTrackingActuator(unittest.TestCase):
 
     def check_sin_path(
         self,
-        pos_off,
-        pos_ampl,
-        vel_off,
-        period,
-        frac_phase,
-        cmd_interval,
-        min_position,
-        max_position,
-        max_velocity,
-        max_acceleration,
-        nsettle,
-        max_nslew,
-        max_position_err,
-        max_velocity_err,
-    ):
+        pos_off: float,
+        pos_ampl: float,
+        vel_off: float,
+        period: float,
+        frac_phase: float,
+        cmd_interval: float,
+        min_position: float,
+        max_position: float,
+        max_velocity: float,
+        max_acceleration: float,
+        nsettle: int,
+        max_nslew: int,
+        max_position_err: float,
+        max_velocity_err: float,
+    ) -> None:
         """Check slewing and tracking to a sinusoidal path.
 
         Parameters
@@ -537,7 +545,3 @@ class TestTrackingActuator(unittest.TestCase):
         # use a fudge factor for acceleration because it will typically
         # be at the limit
         self.assertLessEqual(max_acceleration, max_acceleration * 1.000001)
-
-
-if __name__ == "__main__":
-    unittest.main()

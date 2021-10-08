@@ -21,20 +21,22 @@
 
 __all__ = ["CosineGenerator", "RampGenerator"]
 
-from lsst.ts import salobj
+import typing
 
 import numpy as np
+
+from lsst.ts import utils
 
 
 class CosineGenerator:
     def __init__(
         self,
-        center_positions,
-        amplitudes,
-        max_speeds,
-        advance_time=0.1,
-        nextra=5,
-    ):
+        center_positions: typing.Sequence[float],
+        amplitudes: typing.Sequence[float],
+        max_speeds: typing.Sequence[float],
+        advance_time: float = 0.1,
+        nextra: int = 5,
+    ) -> None:
         """Functor to generate position, velocity and time for one period
         of a cosine, in one or more axes.
 
@@ -117,10 +119,12 @@ class CosineGenerator:
         )
 
     @property
-    def duration(self):
+    def duration(self) -> float:
         return np.amax(self.period_arr)
 
-    def __call__(self):
+    def __call__(
+        self,
+    ) -> typing.Generator[typing.Tuple[np.ndarray, np.ndarray, float], None, None]:
         """Generator of positions, velocities and time.
 
         Returns
@@ -132,7 +136,7 @@ class CosineGenerator:
         * tai_time : `float`
             Current time + advance_time (TAI unix seconds).
         """
-        tai = salobj.current_tai() + self.advance_time
+        tai = utils.current_tai() + self.advance_time
         start_tai = tai
         end_tai_arr = start_tai + self.period_arr
         max_tai = np.max(end_tai_arr)
@@ -149,18 +153,23 @@ class CosineGenerator:
                     position_arr[i] = self.end_position_arr[i]
                     velocity_arr[i] = 0
             yield (position_arr, velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time
 
         zero_velocity_arr = np.zeros(self.naxes)
         for i in range(self.nextra):
             yield (self.end_position_arr, zero_velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time
 
 
 class RampGenerator:
     def __init__(
-        self, start_positions, end_positions, speeds, advance_time=0.1, nextra=5
-    ):
+        self,
+        start_positions: typing.Sequence[float],
+        end_positions: typing.Sequence[float],
+        speeds: typing.Sequence[float],
+        advance_time: float = 0.1,
+        nextra: int = 5,
+    ) -> None:
         """Functor to generate position, velocity and TAI time
         for a constant-speed move in one or more axes.
 
@@ -230,11 +239,13 @@ class RampGenerator:
         self.velocity_arr = np.copysign(self.speed_arr, delta_position_arr)
 
     @property
-    def duration(self):
+    def duration(self) -> float:
         """Duration of the move (seconds), ignoring the extra elements."""
         return np.amax(self.duration_arr)
 
-    def __call__(self):
+    def __call__(
+        self,
+    ) -> typing.Generator[typing.Tuple[np.ndarray, np.ndarray, float], None, None]:
         """Generator of positions, velocities and time.
 
         Returns
@@ -246,7 +257,7 @@ class RampGenerator:
         * tai_time : `float`
             Current time + advance_time (TAI unix seconds).
         """
-        tai = salobj.current_tai() + self.advance_time
+        tai = utils.current_tai() + self.advance_time
         start_tai = tai
         end_tai_arr = start_tai + self.duration_arr
         max_tai = np.max(end_tai_arr)
@@ -261,9 +272,9 @@ class RampGenerator:
                     position_arr[i] = self.end_position_arr[i]
                     velocity_arr[i] = 0
             yield (position_arr, velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time
 
         zero_velocity_arr = np.zeros(self.naxes)
         for i in range(self.nextra):
             yield (self.end_position_arr, zero_velocity_arr, tai)
-            tai = salobj.current_tai() + self.advance_time
+            tai = utils.current_tai() + self.advance_time

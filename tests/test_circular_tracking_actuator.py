@@ -22,12 +22,12 @@
 import itertools
 import unittest
 
-from lsst.ts import salobj
+from lsst.ts import utils
 from lsst.ts import simactuators
 
 
 class TestCircularTrackingActuator(unittest.TestCase):
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         max_velocity = 3
         max_acceleration = 4
         dtmax_track = 0.5
@@ -59,7 +59,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
         self.assertEqual(actuator.path.kind, actuator.Kind.Stopped)
 
         for start_position in (-10, -0.001, 1, 359, 360):
-            expected_start_position = salobj.angle_wrap_nonnegative(start_position).deg
+            expected_start_position = utils.angle_wrap_nonnegative(start_position).deg
             actuator = simactuators.CircularTrackingActuator(
                 max_velocity=max_velocity,
                 max_acceleration=max_acceleration,
@@ -71,7 +71,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
             self.assertAlmostEqual(actuator.path[-1].position, expected_start_position)
             self.assertAlmostEqual(actuator.target.position, expected_start_position)
 
-    def test_constructor_errors(self):
+    def test_constructor_errors(self) -> None:
         max_velocity = 3
         max_acceleration = 4
         dtmax_track = 0.5
@@ -104,7 +104,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
                 dtmax_track=dtmax_track,
             )
 
-    def test_set_target(self):
+    def test_set_target(self) -> None:
         for (
             start_position,
             end_position,
@@ -116,7 +116,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
             (0, -0.1, 0.1),
             (0, -0.1, 0.1),
         ):
-            start_tai = salobj.current_tai()
+            start_tai = utils.current_tai()
             end_tai = start_tai + 1
             start_segment = simactuators.path.PathSegment(
                 position=start_position, velocity=start_velocity, tai=start_tai
@@ -126,7 +126,11 @@ class TestCircularTrackingActuator(unittest.TestCase):
             )
             self.check_set_target(start_segment=start_segment, end_segment=end_segment)
 
-    def check_set_target(self, start_segment, end_segment):
+    def check_set_target(
+        self,
+        start_segment: simactuators.path.PathSegment,
+        end_segment: simactuators.path.PathSegment,
+    ) -> None:
         self.assertGreater(end_segment.tai, start_segment.tai)
         max_velocity = 3
         max_acceleration = 4
@@ -139,7 +143,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
 
         targets = dict()
         paths = dict()
-        predicted_wrapped_target_position = salobj.angle_wrap_nonnegative(
+        predicted_wrapped_target_position = utils.angle_wrap_nonnegative(
             end_segment.position
         ).deg
         for direction in simactuators.Direction:
