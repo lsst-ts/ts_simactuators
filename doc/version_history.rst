@@ -6,6 +6,15 @@
 Version History
 ###############
 
+v2.2.4
+------
+
+* Fix a new mypy error by not checking DM's `lsst/__init__.py` files.
+
+Requires:
+
+* ts_utils 1
+
 v2.2.3
 ------
 
