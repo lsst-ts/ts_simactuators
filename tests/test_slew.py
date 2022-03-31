@@ -143,7 +143,7 @@ class TestSlew(unittest.TestCase):
         # compute expected delta time and distance covered
         # going from 0 velocity to full velocity at full acceleration
         dt_max_velocity = max_velocity / max_acceleration
-        dp_max_velocity = 0.5 * max_acceleration * dt_max_velocity ** 2
+        dp_max_velocity = 0.5 * max_acceleration * dt_max_velocity**2
 
         for start_position, dpos in itertools.product(
             (-5, 0),
@@ -223,7 +223,7 @@ class TestSlew(unittest.TestCase):
         # compute expected delta time and distance covered
         # going from 0 velocity to full velocity at full acceleration
         dt_max_velocity = max_velocity / max_acceleration
-        dp_max_velocity = 0.5 * max_acceleration * dt_max_velocity ** 2
+        dp_max_velocity = 0.5 * max_acceleration * dt_max_velocity**2
 
         for start_position, dpos in itertools.product(
             (-5, 0),
