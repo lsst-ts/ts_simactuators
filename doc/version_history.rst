@@ -6,6 +6,15 @@
 Version History
 ###############
 
+v2.2.5
+------
+
+* Fix a black formatting issue.
+
+Requires:
+
+* ts_utils 1
+
 v2.2.4
 ------
 
