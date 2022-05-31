@@ -6,6 +6,15 @@
 Version History
 ###############
 
+v2.2.6
+------
+
+* Build with pyproject.toml.
+
+Requires:
+
+* ts_utils 1
+
 v2.2.5
 ------
 
