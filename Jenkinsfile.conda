@@ -1,2 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline([], "ts-simactuators", "lsst.ts.simactuators")
+CondaPipeline([], "ts-simactuators", "lsst.ts.simactuators", "noarch")
