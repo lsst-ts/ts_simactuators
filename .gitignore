@@ -1,10 +1,13 @@
 .sconsign.dblite
 config.log
 .sconf_temp
-.vscode
 version.py
 __pycache__
 tests/.tests
 pytest_session.txt
 .pytest_cache
 .coverage
+.hypothesis
+
+# Editors
+.vscode
