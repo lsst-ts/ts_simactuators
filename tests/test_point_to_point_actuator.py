@@ -22,8 +22,7 @@
 import asyncio
 import unittest
 
-from lsst.ts import utils
-from lsst.ts import simactuators
+from lsst.ts import simactuators, utils
 
 
 class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):

@@ -24,7 +24,6 @@ __all__ = ["CosineGenerator", "RampGenerator"]
 import typing
 
 import numpy as np
-
 from lsst.ts import utils
 
 

@@ -24,6 +24,7 @@ __all__ = ["BasePointToPointActuator"]
 import typing
 
 from lsst.ts import utils
+
 from . import base
 
 

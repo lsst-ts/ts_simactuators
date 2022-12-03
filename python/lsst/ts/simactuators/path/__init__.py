@@ -20,7 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # This file is part of ts_simactuators.
 
-from .path_segment import *
 from .path import *
+from .path_segment import *
 from .slew import *
 from .stop import *

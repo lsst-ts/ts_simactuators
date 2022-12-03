@@ -24,8 +24,8 @@ __all__ = ["CircularPointToPointActuator"]
 import typing
 
 from lsst.ts import utils
-from . import base
-from . import base_point_to_point_actuator
+
+from . import base, base_point_to_point_actuator
 
 
 class CircularPointToPointActuator(
