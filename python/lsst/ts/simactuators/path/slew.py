@@ -24,9 +24,7 @@ __all__ = ["slew", "SLEW_FUDGE"]
 import math
 import sys
 
-from . import path
-from . import path_segment
-
+from . import path, path_segment
 
 SLEW_FUDGE = 1.05
 """Fudge factor to avoid borderline cases; should be a bit larger than 1"""

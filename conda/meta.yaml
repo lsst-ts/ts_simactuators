@@ -8,22 +8,11 @@ source:
 
 build:
   noarch: generic
-  script: python -m pip install --no-deps --ignore-installed .
-  script_env:
-    - PATH
-    - PYTHONPATH
-    - LD_LIBRARY_PATH
-    - OSPL_HOME
-    - PYTHON_BUILD_VERSION
-    - PYTHON_BUILD_LOCATION
-    - TS_CONFIG_ATTCS_DIR
-    - LSST_DDS_DOMAIN
+  script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
 
 test:
   requires:
     - ts-conda-build =0.3
-    - ts-dds
-    - ts-idl {{ idl_version }}
     - ts-utils
   source_files:
     - python
@@ -31,17 +20,19 @@ test:
     - setup.cfg
     - pyproject.toml
   commands:
-    - py.test
+    - pytest
 
 requirements:
   host:
-    - python
+    - python {{ python }}
     - pip
     - setuptools_scm
     - setuptools
-    - pytest-runner
-  run:
-    - python
-    - setuptools
+  build:
+    - python {{ python }}
     - setuptools_scm
+    - setuptools
+    - ts-conda-build =0.3
+  run:
+    - python {{ python }}
     - ts-utils

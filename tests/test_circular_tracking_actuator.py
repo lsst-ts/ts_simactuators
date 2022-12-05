@@ -22,8 +22,7 @@
 import itertools
 import unittest
 
-from lsst.ts import utils
-from lsst.ts import simactuators
+from lsst.ts import simactuators, utils
 
 
 class TestCircularTrackingActuator(unittest.TestCase):

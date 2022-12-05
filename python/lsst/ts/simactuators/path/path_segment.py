@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import math
+import sys
+import typing
+
 # This file is part of ts_simactuators.
 #
 # Developed for the Rubin Observatory Telescope and Site System.
@@ -21,9 +25,6 @@ from __future__ import annotations
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import math
-import sys
-import typing
 
 __all__ = ["MotionLimits", "PathSegment"]
 

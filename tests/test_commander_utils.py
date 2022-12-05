@@ -24,9 +24,7 @@ import math
 import unittest
 
 import numpy as np
-
-from lsst.ts import utils
-from lsst.ts import simactuators
+from lsst.ts import simactuators, utils
 
 
 class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
