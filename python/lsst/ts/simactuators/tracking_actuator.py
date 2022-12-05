@@ -26,6 +26,7 @@ __all__ = ["TrackingActuator"]
 import typing
 
 from lsst.ts import utils
+
 from . import path as path_m
 
 

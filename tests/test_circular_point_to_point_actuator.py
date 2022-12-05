@@ -23,8 +23,7 @@ import asyncio
 import typing
 import unittest
 
-from lsst.ts import utils
-from lsst.ts import simactuators
+from lsst.ts import simactuators, utils
 
 
 class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):

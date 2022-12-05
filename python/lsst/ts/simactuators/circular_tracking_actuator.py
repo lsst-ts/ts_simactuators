@@ -25,9 +25,8 @@ import math
 import typing
 
 from lsst.ts import utils
-from . import base
-from . import path
-from . import tracking_actuator
+
+from . import base, path, tracking_actuator
 
 
 class CircularTrackingActuator(tracking_actuator.TrackingActuator):

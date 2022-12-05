@@ -23,8 +23,7 @@ __all__ = ["stop"]
 
 import math
 
-from . import path_segment
-from . import path
+from . import path, path_segment
 
 
 def stop(

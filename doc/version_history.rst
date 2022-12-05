@@ -6,6 +6,17 @@
 Version History
 ###############
 
+v2.2.7
+------
+
+* Run isort.
+* Add isort and mypy to pre-commit and update other pre-commit tasks.
+* Modernize conda/meta.yaml.
+
+Requires:
+
+* ts_utils 1
+
 v2.2.6
 ------
 
