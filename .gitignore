@@ -1,13 +1,16 @@
-.sconsign.dblite
-config.log
-.sconf_temp
-version.py
 __pycache__
+*.egg
+*.egg-info
+*.pyc
+*.log
+version.py
+
+# editors
+.vscode
+
+# pytest
 tests/.tests
 pytest_session.txt
+.hypothesis
 .pytest_cache
 .coverage
-.hypothesis
-
-# Editors
-.vscode
