@@ -92,11 +92,12 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
                 speeds=speeds[0:2],  # Too short
             )
         with self.assertRaises(ValueError):
-            simactuators.RampGenerator(
-                start_positions=start_positions,
-                end_positions=end_positions,
-                speeds=[0, 0, 0],  # Zero speed for nonzero delta
-            )
+            with self.assertWarns(RuntimeWarning):
+                simactuators.RampGenerator(
+                    start_positions=start_positions,
+                    end_positions=end_positions,
+                    speeds=[0, 0, 0],  # Zero speed for nonzero delta
+                )
 
     async def test_cosine_generator_path(self) -> None:
         center_positions = [1, -2, 3.3]
