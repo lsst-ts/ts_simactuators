@@ -6,6 +6,15 @@
 Version History
 ###############
 
+v2.2.9
+------
+
+* Fix a unit test warning.
+* Modernize unit tests to use bare asserts.
+* Use ts_pre_commit_config.
+* Jenkinsfile: use the shared library.
+* Remove scons support.
+
 v2.2.8
 ------
 
