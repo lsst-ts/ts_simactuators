@@ -25,6 +25,7 @@ import sys
 import unittest
 
 import numpy as np
+import pytest
 from lsst.ts import simactuators
 
 
@@ -48,21 +49,21 @@ class TestPathSegment(unittest.TestCase):
             end_position=end_position,
             end_velocity=end_velocity,
         )
-        self.assertAlmostEqual(segment.tai, start_tai)
-        self.assertAlmostEqual(segment.position, start_position)
-        self.assertAlmostEqual(segment.velocity, start_velocity)
+        assert segment.tai == pytest.approx(start_tai)
+        assert segment.position == pytest.approx(start_position)
+        assert segment.velocity == pytest.approx(start_velocity)
 
         end_segment = segment.at(end_tai)
-        self.assertAlmostEqual(end_segment.position, end_position)
-        self.assertAlmostEqual(end_segment.velocity, end_velocity)
+        assert end_segment.position == pytest.approx(end_position)
+        assert end_segment.velocity == pytest.approx(end_velocity)
         start_accel = segment.acceleration
         jerk = segment.jerk
         desired_end_position = start_position + dt * (
             start_velocity + dt * (0.5 * start_accel + dt * (1 / 6) * jerk)
         )
         desired_end_velocity = start_velocity + dt * (start_accel + dt * 0.5 * jerk)
-        self.assertAlmostEqual(end_segment.position, desired_end_position)
-        self.assertAlmostEqual(end_segment.velocity, desired_end_velocity)
+        assert end_segment.position == pytest.approx(desired_end_position)
+        assert end_segment.velocity == pytest.approx(desired_end_velocity)
 
         # estimate position and velocity limits by computing at many points
         desired_min_position = min(start_position, end_position)
@@ -80,10 +81,10 @@ class TestPathSegment(unittest.TestCase):
         desired_max_acceleration = max(abs(start_accel), abs(aB))
 
         limits = segment.limits(end_tai)
-        self.assertAlmostEqual(limits.min_position, desired_min_position, places=3)
-        self.assertAlmostEqual(limits.max_position, desired_max_position, places=3)
-        self.assertAlmostEqual(limits.max_velocity, desired_max_velocity, places=3)
-        self.assertAlmostEqual(limits.max_acceleration, desired_max_acceleration)
+        assert limits.min_position == pytest.approx(desired_min_position, abs=0.001)
+        assert limits.max_position == pytest.approx(desired_max_position, abs=0.001)
+        assert limits.max_velocity == pytest.approx(desired_max_velocity, abs=0.001)
+        assert limits.max_acceleration == pytest.approx(desired_max_acceleration)
 
     def test_from_end_conditions(self) -> None:
         for (
@@ -127,19 +128,19 @@ class TestPathSegment(unittest.TestCase):
             acceleration=acceleration,
             jerk=jerk,
         )
-        self.assertEqual(segment.tai, tai)
-        self.assertEqual(segment.position, position)
-        self.assertEqual(segment.velocity, velocity)
-        self.assertEqual(segment.acceleration, acceleration)
-        self.assertEqual(segment.jerk, jerk)
+        assert segment.tai == tai
+        assert segment.position == position
+        assert segment.velocity == velocity
+        assert segment.acceleration == acceleration
+        assert segment.jerk == jerk
 
         # The at command at the same time should return a copy
         copied_segment = segment.at(tai)
-        self.assertEqual(copied_segment.tai, tai)
-        self.assertAlmostEqual(copied_segment.position, position)
-        self.assertAlmostEqual(copied_segment.velocity, velocity)
-        self.assertAlmostEqual(copied_segment.acceleration, acceleration)
-        self.assertEqual(copied_segment.jerk, jerk)
+        assert copied_segment.tai == tai
+        assert copied_segment.position == pytest.approx(position)
+        assert copied_segment.velocity == pytest.approx(velocity)
+        assert copied_segment.acceleration == pytest.approx(acceleration)
+        assert copied_segment.jerk == jerk
 
         for dt in (-5.1, -3.23, 1.23, 6.6):
             with self.subTest(dt=dt):
@@ -157,11 +158,13 @@ class TestPathSegment(unittest.TestCase):
                 )
                 expected_vel = velocity + acceleration * dt + jerk * dt * dt / 2
                 expected_accel = acceleration + jerk * dt
-                self.assertEqual(new_segment.tai, new_tai)
-                self.assertAlmostEqual(new_segment.position, expected_pos, places=5)
-                self.assertAlmostEqual(new_segment.velocity, expected_vel, places=6)
-                self.assertAlmostEqual(new_segment.acceleration, expected_accel)
-                self.assertEqual(new_segment.jerk, jerk)
+                assert new_segment.tai == new_tai
+                assert new_segment.position == pytest.approx(expected_pos, abs=0.00001)
+                assert new_segment.velocity == pytest.approx(
+                    expected_vel, abs=0.0000001
+                )
+                assert new_segment.acceleration == pytest.approx(expected_accel)
+                assert new_segment.jerk == jerk
 
     def test_default_arguments(self) -> None:
         """Test constructing a PathSegment with default arguments."""
@@ -181,11 +184,9 @@ class TestPathSegment(unittest.TestCase):
                 segment = simactuators.path.PathSegment(**kwargs)
                 for field_name in full_kwargs:
                     if field_name == field_to_omit:
-                        self.assertEqual(getattr(segment, field_name), 0)
+                        assert getattr(segment, field_name) == 0
                     else:
-                        self.assertEqual(
-                            getattr(segment, field_name), full_kwargs[field_name]
-                        )
+                        assert getattr(segment, field_name) == full_kwargs[field_name]
 
     def test_invalid_inputs(self) -> None:
         """Test invalid inputs for PathSegment.from_end_conditions.
@@ -197,7 +198,7 @@ class TestPathSegment(unittest.TestCase):
                 start_tai = 51.0  # arbitrary
                 end_tai = start_tai + dt
 
-                with self.assertRaises(ValueError):
+                with pytest.raises(ValueError):
                     simactuators.path.PathSegment.from_end_conditions(
                         start_tai,
                         start_position=1,

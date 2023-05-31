@@ -23,6 +23,7 @@ import asyncio
 import typing
 import unittest
 
+import pytest
 from lsst.ts import simactuators, utils
 
 
@@ -37,26 +38,26 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             )
             time_slop = utils.current_tai() - tai0
             if 0 <= start_position < 360:
-                self.assertEqual(actuator.start_position, start_position)
+                assert actuator.start_position == start_position
             else:
                 # The reported angle is wrapped
                 utils.assert_angles_almost_equal(
                     actuator.start_position, start_position
                 )
-            self.assertEqual(actuator.end_position, actuator.start_position)
-            self.assertAlmostEqual(actuator.start_tai, tai0, delta=time_slop)
-            self.assertEqual(actuator.start_tai, actuator.end_tai)
-            self.assertEqual(actuator.direction, 1)
+            assert actuator.end_position == actuator.start_position
+            assert actuator.start_tai == pytest.approx(tai0, abs=time_slop)
+            assert actuator.start_tai == actuator.end_tai
+            assert actuator.direction == 1
             for dt in (-1, 0, 1):
                 tai = actuator.start_tai + dt
                 utils.assert_angles_almost_equal(actuator.position(tai), start_position)
-                self.assertEqual(actuator.velocity(tai), 0)
-                self.assertFalse(actuator.moving(tai))
+                assert actuator.velocity(tai) == 0
+                assert not actuator.moving(tai)
 
         start_position = 3
         for bad_speed in (0, -0.001):
             with self.subTest(bad_speed=bad_speed):
-                with self.assertRaises(ValueError):
+                with pytest.raises(ValueError):
                     simactuators.CircularPointToPointActuator(
                         start_position=start_position,
                         speed=bad_speed,
@@ -91,20 +92,20 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
                 start_position=pos, speed=2
             )
             duration = actuator.set_position(pos, **kwargs)
-            self.assertEqual(duration, 0)
+            assert duration == 0
             utils.assert_angles_almost_equal(actuator.start_position, pos)
             utils.assert_angles_almost_equal(actuator.end_position, pos)
-            self.assertEqual(actuator.start_tai, actuator.end_tai)
-            self.assertFalse(actuator.moving(actuator.start_tai))
-            self.assertEqual(actuator.velocity(actuator.start_tai), 0)
-            self.assertEqual(actuator.direction, simactuators.Direction.POSITIVE)
+            assert actuator.start_tai == actuator.end_tai
+            assert not actuator.moving(actuator.start_tai)
+            assert actuator.velocity(actuator.start_tai) == 0
+            assert actuator.direction == simactuators.Direction.POSITIVE
 
             # Check specifying an explicit start_tai;
             # pick a value different than the existing start_tai
             # so we can tell the difference.
             start_tai = actuator.start_tai + 5
             actuator.set_position(position=1, start_tai=start_tai, **kwargs)
-            self.assertEqual(actuator.start_tai, start_tai)
+            assert actuator.start_tai == start_tai
 
     async def check_set_position(
         self, start_position: float, end_position: float, **kwargs: typing.Any
@@ -148,13 +149,13 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         elif direction == simactuators.Direction.NEGATIVE and min_delta_position > 0:
             delta_position = 360 - min_delta_position
         predicted_duration = abs(delta_position) / speed
-        self.assertAlmostEqual(duration, predicted_duration)
+        assert duration == pytest.approx(predicted_duration)
         if "start_tai" in kwargs:
-            self.assertEqual(actuator.start_tai, kwargs["start_tai"])
+            assert actuator.start_tai == kwargs["start_tai"]
         else:
-            self.assertAlmostEqual(actuator.start_tai, tai0, delta=time_slop)
-        self.assertAlmostEqual(
-            actuator.start_tai + predicted_duration, actuator.end_tai, places=6
+            assert actuator.start_tai == pytest.approx(tai0, abs=time_slop)
+        assert actuator.start_tai + predicted_duration == pytest.approx(
+            actuator.end_tai, abs=0.000001
         )
         utils.assert_angles_almost_equal(actuator.end_position, end_position)
         if direction == simactuators.Direction.NEAREST:
@@ -165,7 +166,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             )
         else:
             predicted_direction = direction
-        self.assertEqual(actuator.direction, predicted_direction)
+        assert actuator.direction == predicted_direction
         predicted_speed = speed * predicted_direction
 
         # The actuator should not be moving before or after the move.
@@ -175,8 +176,8 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             actuator.end_tai,
             actuator.end_tai + 1,
         ):
-            self.assertFalse(actuator.moving(tai))
-            self.assertEqual(actuator.velocity(tai), 0)
+            assert not actuator.moving(tai)
+            assert actuator.velocity(tai) == 0
 
         # The actuator should be moving during the move.
         for tai in (
@@ -184,8 +185,8 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             (actuator.start_tai + actuator.end_tai) / 2,
             actuator.end_tai - 0.001,
         ):
-            self.assertTrue(actuator.moving(tai))
-            self.assertEqual(actuator.velocity(tai), predicted_speed)
+            assert actuator.moving(tai)
+            assert actuator.velocity(tai) == predicted_speed
 
     async def test_stop(self) -> None:
         # Pick start and end positions that will not wrap
@@ -201,30 +202,32 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         duration = actuator.set_position(
             target_position, direction=simactuators.Direction.NEAREST
         )
-        self.assertEqual(actuator.end_position, target_position)
-        self.assertTrue(actuator.moving(utils.current_tai()))
+        assert actuator.end_position == target_position
+        assert actuator.moving(utils.current_tai())
         # Let the actuator move for some arbitrary time
         # that is less than the remaining time
         sleep_time = 0.21
-        self.assertGreater(duration, sleep_time)
+        assert duration > sleep_time
         await asyncio.sleep(sleep_time)
         tai0 = utils.current_tai()
         actuator.stop()
         time_slop = utils.current_tai() - tai0
-        self.assertAlmostEqual(tai0, actuator.end_tai, delta=time_slop)
+        assert tai0 == pytest.approx(actuator.end_tai, abs=time_slop)
         position_slop = time_slop * speed
         utils.assert_angles_almost_equal(
             actuator.end_position, actuator.position(tai0), max_diff=position_slop
         )
 
         move_time = actuator.end_tai - actuator.start_tai
-        self.assertGreater(move_time, 0)
+        assert move_time > 0
         predicted_end_position = start_position + speed * move_time
-        self.assertAlmostEqual(predicted_end_position, actuator.end_position, places=6)
-        self.assertFalse(actuator.moving(actuator.end_tai))
-        self.assertEqual(actuator.position(actuator.end_tai), actuator.end_position)
-        self.assertEqual(actuator.start_position, start_position)
-        self.assertEqual(actuator.position(actuator.start_tai), actuator.start_position)
+        assert predicted_end_position == pytest.approx(
+            actuator.end_position, abs=0.000001
+        )
+        assert not actuator.moving(actuator.end_tai)
+        assert actuator.position(actuator.end_tai) == actuator.end_position
+        assert actuator.start_position == start_position
+        assert actuator.position(actuator.start_tai) == actuator.start_position
 
         # Stopping a stopped actuator should have no effect
         # except updating end_tai. Sleep long enough
@@ -235,10 +238,10 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         tai0 = utils.current_tai()
         actuator.stop()
         time_slop = utils.current_tai()
-        self.assertEqual(actuator.start_tai, old_start_tai)
-        self.assertEqual(actuator.start_position, start_position)
-        self.assertEqual(actuator.end_position, old_pos)
-        self.assertAlmostEqual(actuator.end_tai, tai0, delta=time_slop)
+        assert actuator.start_tai == old_start_tai
+        assert actuator.start_position == start_position
+        assert actuator.end_position == old_pos
+        assert actuator.end_tai == pytest.approx(tai0, abs=time_slop)
 
 
 if __name__ == "__main__":
