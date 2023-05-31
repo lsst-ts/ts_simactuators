@@ -22,6 +22,7 @@
 import itertools
 import unittest
 
+import pytest
 from lsst.ts import simactuators, utils
 
 
@@ -40,22 +41,22 @@ class TestCircularTrackingActuator(unittest.TestCase):
             nsettle=nsettle,
             tai=tai,
         )
-        self.assertEqual(actuator.max_velocity, max_velocity)
-        self.assertEqual(actuator.max_acceleration, max_acceleration)
-        self.assertEqual(actuator.dtmax_track, dtmax_track)
-        self.assertEqual(actuator.nsettle, nsettle)
-        self.assertEqual(actuator.target.tai, tai)
-        self.assertEqual(actuator.target.position, 0)
-        self.assertEqual(actuator.target.velocity, 0)
-        self.assertEqual(actuator.target.acceleration, 0)
-        self.assertEqual(actuator.target.jerk, 0)
-        self.assertEqual(actuator.path[0].tai, tai)
-        self.assertEqual(actuator.path[0].position, 0)
-        self.assertEqual(actuator.path[0].velocity, 0)
-        self.assertEqual(actuator.path[0].acceleration, 0)
-        self.assertEqual(actuator.path[0].jerk, 0)
-        self.assertEqual(len(actuator.path), 1)
-        self.assertEqual(actuator.path.kind, actuator.Kind.Stopped)
+        assert actuator.max_velocity == max_velocity
+        assert actuator.max_acceleration == max_acceleration
+        assert actuator.dtmax_track == dtmax_track
+        assert actuator.nsettle == nsettle
+        assert actuator.target.tai == tai
+        assert actuator.target.position == 0
+        assert actuator.target.velocity == 0
+        assert actuator.target.acceleration == 0
+        assert actuator.target.jerk == 0
+        assert actuator.path[0].tai == tai
+        assert actuator.path[0].position == 0
+        assert actuator.path[0].velocity == 0
+        assert actuator.path[0].acceleration == 0
+        assert actuator.path[0].jerk == 0
+        assert len(actuator.path) == 1
+        assert actuator.path.kind == actuator.Kind.Stopped
 
         for start_position in (-10, -0.001, 1, 359, 360):
             expected_start_position = utils.angle_wrap_nonnegative(start_position).deg
@@ -67,8 +68,8 @@ class TestCircularTrackingActuator(unittest.TestCase):
                 tai=tai,
                 start_position=start_position,
             )
-            self.assertAlmostEqual(actuator.path[-1].position, expected_start_position)
-            self.assertAlmostEqual(actuator.target.position, expected_start_position)
+            assert actuator.path[-1].position == pytest.approx(expected_start_position)
+            assert actuator.target.position == pytest.approx(expected_start_position)
 
     def test_constructor_errors(self) -> None:
         max_velocity = 3
@@ -76,13 +77,13 @@ class TestCircularTrackingActuator(unittest.TestCase):
         dtmax_track = 0.5
 
         # Check that max_velocity must be positive.
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CircularTrackingActuator(
                 max_velocity=0,
                 max_acceleration=max_acceleration,
                 dtmax_track=dtmax_track,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CircularTrackingActuator(
                 max_velocity=-1,
                 max_acceleration=max_acceleration,
@@ -90,13 +91,13 @@ class TestCircularTrackingActuator(unittest.TestCase):
             )
 
         # Check that max_acceleration must be positive.
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CircularTrackingActuator(
                 max_velocity=max_velocity,
                 max_acceleration=0,
                 dtmax_track=dtmax_track,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CircularTrackingActuator(
                 max_velocity=max_velocity,
                 max_acceleration=-1,
@@ -130,7 +131,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
         start_segment: simactuators.path.PathSegment,
         end_segment: simactuators.path.PathSegment,
     ) -> None:
-        self.assertGreater(end_segment.tai, start_segment.tai)
+        assert end_segment.tai > start_segment.tai
         max_velocity = 3
         max_acceleration = 4
         dtmax_track = 0.5
@@ -156,10 +157,10 @@ class TestCircularTrackingActuator(unittest.TestCase):
                 velocity=end_segment.velocity,
                 direction=direction,
             )
-            self.assertEqual(actuator.target.tai, end_segment.tai)
-            self.assertEqual(actuator.target.velocity, end_segment.velocity)
-            self.assertAlmostEqual(
-                actuator.target.position, predicted_wrapped_target_position
+            assert actuator.target.tai == end_segment.tai
+            assert actuator.target.velocity == end_segment.velocity
+            assert actuator.target.position == pytest.approx(
+                predicted_wrapped_target_position
             )
             targets[direction] = actuator.target
             paths[direction] = actuator.path
@@ -167,7 +168,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
         # Check that NEAREST direction chooses the path of shortest duration
         end_tais = {direction: path[-1].tai for direction, path in paths.items()}
         min_end_tai = min(tai for tai in end_tais.values())
-        self.assertEqual(end_tais[simactuators.Direction.NEAREST], min_end_tai)
+        assert end_tais[simactuators.Direction.NEAREST] == min_end_tai
 
         # Check that POSITIVE direction chooses positive direction at
         # end_segment.tai for the target vs the current position at end_tai,
@@ -181,9 +182,9 @@ class TestCircularTrackingActuator(unittest.TestCase):
             current_position = paths[direction].at(end_segment.tai).position
             slop = 1e-5
             if direction is simactuators.Direction.POSITIVE:
-                self.assertGreaterEqual(target_position + slop, current_position)
+                assert target_position + slop >= current_position
             else:
-                self.assertLessEqual(target_position - slop, current_position)
+                assert target_position - slop <= current_position
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ import typing
 import unittest
 
 import numpy as np
+import pytest
 from lsst.ts import simactuators
 
 
@@ -82,24 +83,24 @@ class TestTrackingActuator(unittest.TestCase):
             nsettle=nsettle,
             tai=tai,
         )
-        self.assertEqual(actuator.min_position, min_position)
-        self.assertEqual(actuator.max_position, max_position)
-        self.assertEqual(actuator.max_velocity, max_velocity)
-        self.assertEqual(actuator.max_acceleration, max_acceleration)
-        self.assertEqual(actuator.dtmax_track, dtmax_track)
-        self.assertEqual(actuator.nsettle, nsettle)
-        self.assertEqual(actuator.target.tai, tai)
-        self.assertEqual(actuator.target.position, 0)
-        self.assertEqual(actuator.target.velocity, 0)
-        self.assertEqual(actuator.target.acceleration, 0)
-        self.assertEqual(actuator.target.jerk, 0)
-        self.assertEqual(actuator.path[0].tai, tai)
-        self.assertEqual(actuator.path[0].position, 0)
-        self.assertEqual(actuator.path[0].velocity, 0)
-        self.assertEqual(actuator.path[0].acceleration, 0)
-        self.assertEqual(actuator.path[0].jerk, 0)
-        self.assertEqual(len(actuator.path), 1)
-        self.assertEqual(actuator.path.kind, actuator.Kind.Stopped)
+        assert actuator.min_position == min_position
+        assert actuator.max_position == max_position
+        assert actuator.max_velocity == max_velocity
+        assert actuator.max_acceleration == max_acceleration
+        assert actuator.dtmax_track == dtmax_track
+        assert actuator.nsettle == nsettle
+        assert actuator.target.tai == tai
+        assert actuator.target.position == 0
+        assert actuator.target.velocity == 0
+        assert actuator.target.acceleration == 0
+        assert actuator.target.jerk == 0
+        assert actuator.path[0].tai == tai
+        assert actuator.path[0].position == 0
+        assert actuator.path[0].velocity == 0
+        assert actuator.path[0].acceleration == 0
+        assert actuator.path[0].jerk == 0
+        assert len(actuator.path) == 1
+        assert actuator.path.kind == actuator.Kind.Stopped
 
         for start_position in (
             min_position,
@@ -116,8 +117,8 @@ class TestTrackingActuator(unittest.TestCase):
                 tai=tai,
                 start_position=start_position,
             )
-            self.assertAlmostEqual(actuator.path[-1].position, start_position)
-            self.assertAlmostEqual(actuator.target.position, start_position)
+            assert actuator.path[-1].position == pytest.approx(start_position)
+            assert actuator.target.position == pytest.approx(start_position)
 
         # Check that initial position is 0 if in range
         # [min_position, max_position), else min_position.
@@ -140,8 +141,8 @@ class TestTrackingActuator(unittest.TestCase):
                 nsettle=nsettle,
                 tai=tai,
             )
-            self.assertAlmostEqual(actuator.path[-1].position, expected_p0)
-            self.assertAlmostEqual(actuator.target.position, expected_p0)
+            assert actuator.path[-1].position == pytest.approx(expected_p0)
+            assert actuator.target.position == pytest.approx(expected_p0)
 
     def test_constructor_errors(self) -> None:
         min_position = -1
@@ -153,7 +154,7 @@ class TestTrackingActuator(unittest.TestCase):
         tai = 0.5
 
         # require min_position < max_position
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.TrackingActuator(
                 min_position=max_position,
                 max_position=max_position,
@@ -163,7 +164,7 @@ class TestTrackingActuator(unittest.TestCase):
                 nsettle=nsettle,
                 tai=tai,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.TrackingActuator(
                 min_position=max_position + 1,
                 max_position=max_position,
@@ -175,7 +176,7 @@ class TestTrackingActuator(unittest.TestCase):
             )
 
         # require max_velocity > 0
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.TrackingActuator(
                 min_position=min_position,
                 max_position=max_position,
@@ -185,7 +186,7 @@ class TestTrackingActuator(unittest.TestCase):
                 nsettle=nsettle,
                 tai=tai,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.TrackingActuator(
                 min_position=min_position,
                 max_position=max_position,
@@ -197,7 +198,7 @@ class TestTrackingActuator(unittest.TestCase):
             )
 
         # require max_acceleration > 0
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.TrackingActuator(
                 min_position=min_position,
                 max_position=max_position,
@@ -207,7 +208,7 @@ class TestTrackingActuator(unittest.TestCase):
                 nsettle=nsettle,
                 tai=tai,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.TrackingActuator(
                 min_position=min_position,
                 max_position=max_position,
@@ -315,44 +316,42 @@ class TestTrackingActuator(unittest.TestCase):
                     nsettle=1,
                     tai=0,
                 )
-                self.assertEqual(actuator.kind(0), actuator.Kind.Stopped)
+                assert actuator.kind(0) == actuator.Kind.Stopped
                 for i in range(5):
                     tai = i * cmd_interval + 1  # +1 to avoid 0
                     cmd_pos = pos_off + tai * vel_off
                     actuator.set_target(position=cmd_pos, velocity=vel_off, tai=tai)
-                self.assertEqual(actuator.kind(tai), actuator.Kind.Slewing)
+                assert actuator.kind(tai) == actuator.Kind.Slewing
 
                 # expected starting position and velocity for the halt
                 tai_start_halt = tai + cmd_interval
                 segment_before_stop = actuator.path.at(tai_start_halt)
                 actuator.stop(tai=tai_start_halt)
-                self.assertEqual(actuator.kind(tai_start_halt), actuator.Kind.Stopping)
+                assert actuator.kind(tai_start_halt) == actuator.Kind.Stopping
                 segment_start_halt = actuator.path.at(tai_start_halt)
-                self.assertAlmostEqual(
-                    segment_before_stop.position, segment_start_halt.position
+                assert segment_before_stop.position == pytest.approx(
+                    segment_start_halt.position
                 )
-                self.assertAlmostEqual(
-                    segment_before_stop.velocity, segment_start_halt.velocity
+                assert segment_before_stop.velocity == pytest.approx(
+                    segment_start_halt.velocity
                 )
 
                 # the ending velocity and acceleration are, of course, 0
                 # and the current and target positions should match at the end
                 tai_end_halt = actuator.path[-1].tai
                 segment_end_halt = actuator.path.at(tai_end_halt)
-                self.assertEqual(segment_end_halt.velocity, 0)
-                self.assertEqual(segment_end_halt.acceleration, 0)
+                assert segment_end_halt.velocity == 0
+                assert segment_end_halt.acceleration == 0
                 cmd_segment_end_halt = actuator.target.at(tai=tai_end_halt)
-                self.assertAlmostEqual(
-                    cmd_segment_end_halt.position, segment_end_halt.position
+                assert cmd_segment_end_halt.position == pytest.approx(
+                    segment_end_halt.position
                 )
-                self.assertEqual(cmd_segment_end_halt.velocity, 0)
-                self.assertEqual(cmd_segment_end_halt.acceleration, 0)
-                self.assertGreater(tai_end_halt, tai_start_halt)
+                assert cmd_segment_end_halt.velocity == 0
+                assert cmd_segment_end_halt.acceleration == 0
+                assert tai_end_halt > tai_start_halt
                 # the end kind should be Stopped;
                 # add a margin to the time  to avoid roundoff error
-                self.assertEqual(
-                    actuator.kind(tai_end_halt + 0.0001), actuator.Kind.Stopped
-                )
+                assert actuator.kind(tai_end_halt + 0.0001) == actuator.Kind.Stopped
 
     def test_abort(self) -> None:
         for pos_off, vel_off in itertools.product(
@@ -370,30 +369,30 @@ class TestTrackingActuator(unittest.TestCase):
                     nsettle=1,
                     tai=0,
                 )
-                self.assertEqual(actuator.kind(0), actuator.Kind.Stopped)
+                assert actuator.kind(0) == actuator.Kind.Stopped
                 for i in range(5):
                     tai = i * cmd_interval + 1  # +1 to avoid 0
                     cmd_pos = pos_off + tai * vel_off
                     actuator.set_target(position=cmd_pos, velocity=vel_off, tai=tai)
-                self.assertEqual(actuator.kind(tai), actuator.Kind.Slewing)
+                assert actuator.kind(tai) == actuator.Kind.Slewing
 
                 # expected starting position and velocity for the halt
                 t_abort = tai + cmd_interval
                 segment_before_abort = actuator.path.at(t_abort)
                 actuator.abort(tai=t_abort)
-                self.assertEqual(actuator.kind(t_abort), actuator.Kind.Stopped)
+                assert actuator.kind(t_abort) == actuator.Kind.Stopped
                 segment_abort = actuator.path.at(t_abort)
-                self.assertAlmostEqual(
-                    segment_before_abort.position, segment_abort.position
+                assert segment_before_abort.position == pytest.approx(
+                    segment_abort.position
                 )
-                self.assertAlmostEqual(segment_abort.velocity, 0)
-                self.assertEqual(len(actuator.path), 1)
+                assert segment_abort.velocity == pytest.approx(0)
+                assert len(actuator.path) == 1
 
                 # abort does not change actuator.target
                 cmd_segment_abort = actuator.target.at(t_abort)
                 desired_cmd_pos = pos_off + t_abort * vel_off
-                self.assertAlmostEqual(cmd_segment_abort.position, desired_cmd_pos)
-                self.assertAlmostEqual(cmd_segment_abort.velocity, vel_off)
+                assert cmd_segment_abort.position == pytest.approx(desired_cmd_pos)
+                assert cmd_segment_abort.velocity == pytest.approx(vel_off)
 
     def check_sin_path(
         self,
@@ -476,11 +475,11 @@ class TestTrackingActuator(unittest.TestCase):
             nsettle=nsettle,
             tai=-cmd_interval,
         )  # so we can start with tracking, of possible
-        self.assertEqual(len(actuator.path), 1)
+        assert len(actuator.path) == 1
         actuator.path[0].position = position - pos_off
         actuator.path[0].velocity = velocity - vel_off
-        self.assertEqual(actuator.path[0].acceleration, 0)
-        self.assertEqual(actuator.path.kind, actuator.Kind.Stopped)
+        assert actuator.path[0].acceleration == 0
+        assert actuator.path.kind == actuator.Kind.Stopped
         actuator.path[0].tai = 0
         pos_errors = []
         vel_errors = []
@@ -499,11 +498,11 @@ class TestTrackingActuator(unittest.TestCase):
             # actuator.path.kind being Tracking
             if actuator.path.kind == actuator.Kind.Tracking:
                 ntrack += 1
-                self.assertEqual(actuator._ntrack, ntrack)
+                assert actuator._ntrack == ntrack
                 if actuator._ntrack > actuator.nsettle:
-                    self.assertEqual(actuator.kind(cmd_t), actuator.Kind.Tracking)
+                    assert actuator.kind(cmd_t) == actuator.Kind.Tracking
                 else:
-                    self.assertEqual(actuator.kind(cmd_t), actuator.Kind.Slewing)
+                    assert actuator.kind(cmd_t) == actuator.Kind.Slewing
             elif actuator.path.kind == actuator.Kind.Slewing:
                 nslew += 1
                 if ntrack > 0:
@@ -513,9 +512,9 @@ class TestTrackingActuator(unittest.TestCase):
 
             # check that the commanded PVT was properly recorded
             target_segment = actuator.target.at(cmd_t)
-            self.assertAlmostEqual(target_segment.position, position)
-            self.assertAlmostEqual(target_segment.velocity, velocity)
-            self.assertAlmostEqual(target_segment.acceleration, 0)
+            assert target_segment.position == pytest.approx(position)
+            assert target_segment.velocity == pytest.approx(velocity)
+            assert target_segment.acceleration == pytest.approx(0)
 
             # Check tracking error, once we have settled
             # (when actuator.kind(tai) says we are tracking)
@@ -537,10 +536,10 @@ class TestTrackingActuator(unittest.TestCase):
         max_velocity = np.abs(curr_vels).max()
         max_acceleration = np.abs(curr_accels).max()
         print(f"pos_err={pos_err:0.1e}; vel_err={vel_err:0.1e}; nslew={nslew}")
-        self.assertLessEqual(nslew, max_nslew)
-        self.assertLess(pos_err, max_position_err)
-        self.assertLess(vel_err, max_velocity_err)
-        self.assertLessEqual(max_velocity, max_velocity)
+        assert nslew <= max_nslew
+        assert pos_err < max_position_err
+        assert vel_err < max_velocity_err
+        assert max_velocity <= max_velocity
         # use a fudge factor for acceleration because it will typically
         # be at the limit
-        self.assertLessEqual(max_acceleration, max_acceleration * 1.000001)
+        assert max_acceleration <= max_acceleration * 1.000001
