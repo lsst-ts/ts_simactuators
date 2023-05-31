@@ -24,6 +24,7 @@ import math
 import unittest
 
 import numpy as np
+import pytest
 from lsst.ts import simactuators, utils
 
 
@@ -38,25 +39,25 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             max_speeds=max_speeds,
         )
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CosineGenerator(
                 center_positions=center_positions[0:2],  # Too short
                 amplitudes=amplitudes,
                 max_speeds=max_speeds,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CosineGenerator(
                 center_positions=center_positions,
                 amplitudes=amplitudes[0:2],  # Too short
                 max_speeds=max_speeds,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CosineGenerator(
                 center_positions=center_positions,
                 amplitudes=amplitudes,
                 max_speeds=max_speeds[0:2],  # Too short
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.CosineGenerator(
                 center_positions=center_positions,
                 amplitudes=amplitudes,
@@ -73,30 +74,31 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             speeds=speeds,
         )
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.RampGenerator(
                 start_positions=start_positions[0:2],  # Too short
                 end_positions=end_positions,
                 speeds=speeds,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.RampGenerator(
                 start_positions=start_positions,
                 end_positions=end_positions[0:2],  # Too short
                 speeds=speeds,
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.RampGenerator(
                 start_positions=start_positions,
                 end_positions=end_positions,
                 speeds=speeds[0:2],  # Too short
             )
-        with self.assertRaises(ValueError):
-            simactuators.RampGenerator(
-                start_positions=start_positions,
-                end_positions=end_positions,
-                speeds=[0, 0, 0],  # Zero speed for nonzero delta
-            )
+        with pytest.raises(ValueError):
+            with pytest.warns(RuntimeWarning):
+                simactuators.RampGenerator(
+                    start_positions=start_positions,
+                    end_positions=end_positions,
+                    speeds=[0, 0, 0],  # Zero speed for nonzero delta
+                )
 
     async def test_cosine_generator_path(self) -> None:
         center_positions = [1, -2, 3.3]
@@ -124,7 +126,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
         )
 
         predicted_duration = max(*predicted_durations)
-        self.assertAlmostEqual(cosine_generator.duration, predicted_duration)
+        assert cosine_generator.duration == pytest.approx(predicted_duration)
 
         positions_list = []
         velocities_list = []
@@ -134,7 +136,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             velocities_list.append(velocities)
             tais.append(tai)
             curr_tai = utils.current_tai()
-            self.assertAlmostEqual(curr_tai + advance_time, tai, delta=0.1)
+            assert curr_tai + advance_time == pytest.approx(tai, abs=0.1)
             await asyncio.sleep(0.02)
 
         start_tai = tais[0]
@@ -165,14 +167,14 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             for i in range(len(center_positions)):
                 if dt_start < predicted_durations[i]:
                     if previous_tai is not None:
-                        self.assertAlmostEqual(
-                            position_arr[i], predicted_position_arr[i], delta=0.01
+                        assert position_arr[i] == pytest.approx(
+                            predicted_position_arr[i], abs=0.01
                         )
                 else:
-                    self.assertAlmostEqual(
-                        position_arr[i], start_and_end_position_arr[i]
+                    assert position_arr[i] == pytest.approx(
+                        start_and_end_position_arr[i]
                     )
-                    self.assertEqual(velocity_arr[i], 0)
+                    assert velocity_arr[i] == 0
             previous_position_arr = position_arr
             previous_velocity_arr = velocity_arr
             previous_tai = tai
@@ -195,8 +197,8 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             np.testing.assert_allclose(position_arr, start_and_end_position_arr)
             np.testing.assert_allclose(velocity_arr, np.zeros(3))
 
-        self.assertFalse(np.all(positions_list[-nextra - 1] == 0))
-        self.assertFalse(np.all(velocities_list[-nextra - 1] == 0))
+        assert not np.all(positions_list[-nextra - 1] == 0)
+        assert not np.all(velocities_list[-nextra - 1] == 0)
 
     async def test_ramp_generator_path(self) -> None:
         start_positions = [1, -2, 3.3]
@@ -223,7 +225,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
         )
 
         predicted_duration = max(*predicted_durations)
-        self.assertAlmostEqual(ramp_generator.duration, predicted_duration)
+        assert ramp_generator.duration == pytest.approx(predicted_duration)
 
         positions_list = []
         velocities_list = []
@@ -233,7 +235,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             velocities_list.append(velocities)
             tais.append(tai)
             curr_tai = utils.current_tai()
-            self.assertAlmostEqual(curr_tai + advance_time, tai, delta=0.1)
+            assert curr_tai + advance_time == pytest.approx(tai, abs=0.1)
             await asyncio.sleep(0.1)
 
         np.testing.assert_allclose(positions_list[0], start_positions)
@@ -244,13 +246,13 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             dt = tai - start_tai
             for i in range(len(start_positions)):
                 if dt < predicted_durations[i]:
-                    self.assertAlmostEqual(
-                        position_arr[i], start_positions[i] + speeds[i] * dt
+                    assert position_arr[i] == pytest.approx(
+                        start_positions[i] + speeds[i] * dt
                     )
-                    self.assertAlmostEqual(velocity_arr[i], speeds[i])
+                    assert velocity_arr[i] == pytest.approx(speeds[i])
                 else:
-                    self.assertAlmostEqual(position_arr[i], end_positions[i])
-                    self.assertEqual(velocity_arr[i], 0)
+                    assert position_arr[i] == pytest.approx(end_positions[i])
+                    assert velocity_arr[i] == 0
 
         # Check nextra
         for position_arr, velocity_arr, tai in zip(
@@ -259,5 +261,5 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             np.testing.assert_allclose(position_arr, end_positions)
             np.testing.assert_allclose(velocity_arr, np.zeros(3))
 
-        self.assertFalse(np.all(positions_list[-nextra - 1] == 0))
-        self.assertFalse(np.all(velocities_list[-nextra - 1] == 0))
+        assert not np.all(positions_list[-nextra - 1] == 0)
+        assert not np.all(velocities_list[-nextra - 1] == 0)

@@ -22,6 +22,7 @@
 import itertools
 import unittest
 
+import pytest
 from lsst.ts import simactuators
 
 
@@ -57,26 +58,26 @@ class TestStopTestCase(unittest.TestCase):
         max_acceleration : `float`, optional
             Maximum allowed acceleration (deg/sec^2)
         """
-        self.assertAlmostEqual(path[0].tai, tai)
-        self.assertAlmostEqual(path[0].position, position)
-        self.assertAlmostEqual(path[0].velocity, velocity)
+        assert path[0].tai == pytest.approx(tai)
+        assert path[0].position == pytest.approx(position)
+        assert path[0].velocity == pytest.approx(velocity)
 
-        self.assertIn(len(path), (1, 2))
+        assert len(path) in (1, 2)
 
-        self.assertEqual(path[-1].velocity, 0)
-        self.assertEqual(path[-1].acceleration, 0)
+        assert path[-1].velocity == 0
+        assert path[-1].acceleration == 0
 
         if len(path) > 1:
             segment0 = path[0]
             segment1 = path[1]
             dt = segment1.tai - segment0.tai
-            self.assertGreater(dt, 0)
+            assert dt > 0
             pred_p1 = segment0.position + dt * (
                 segment0.velocity + dt * 0.5 * segment0.acceleration
             )
             pred_v1 = segment0.velocity + dt * segment0.acceleration
-            self.assertAlmostEqual(segment1.position, pred_p1, places=4)
-            self.assertAlmostEqual(segment1.velocity, pred_v1, places=4)
+            assert segment1.position == pytest.approx(pred_p1, abs=0.0001)
+            assert segment1.velocity == pytest.approx(pred_v1, abs=0.0001)
 
     def test_slew_to_stop(self) -> None:
         tai = 1550000000
@@ -93,8 +94,8 @@ class TestStopTestCase(unittest.TestCase):
                     velocity=velocity,
                     max_acceleration=max_acceleration,
                 )
-                self.assertEqual(path.kind, simactuators.path.Kind.Stopping)
-                self.assertEqual(len(path), 2)
+                assert path.kind == simactuators.path.Kind.Stopping
+                assert len(path) == 2
                 self.check_path(
                     path,
                     tai=tai,
@@ -116,8 +117,8 @@ class TestStopTestCase(unittest.TestCase):
                 velocity=0,
                 max_acceleration=max_acceleration,
             )
-            self.assertEqual(len(path), 1)
-            self.assertEqual(path.kind, simactuators.path.Kind.Stopped)
+            assert len(path) == 1
+            assert path.kind == simactuators.path.Kind.Stopped
             self.check_path(
                 path,
                 tai=tai,
@@ -133,11 +134,11 @@ class TestStopTestCase(unittest.TestCase):
         velocity = -2
 
         # max_acceleration must be >= 0
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.path.stop(
                 tai=tai, position=position, velocity=velocity, max_acceleration=0
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             simactuators.path.stop(
                 tai=tai, position=position, velocity=velocity, max_acceleration=-1
             )
