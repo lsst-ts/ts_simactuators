@@ -12,7 +12,7 @@ build:
 
 test:
   requires:
-    - ts-conda-build =0.4
+    - ts-conda-build =0.5
     - ts-utils
   source_files:
     - pyproject.toml
@@ -31,7 +31,7 @@ requirements:
     - python {{ python }}
     - setuptools
     - setuptools_scm
-    - ts-conda-build =0.4
+    - ts-conda-build =0.5
   run:
     - python {{ python }}
     - ts-utils
