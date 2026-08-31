@@ -6,6 +6,11 @@
 Version History
 ###############
 
+v2.2.12
+-------
+
+* Add and update the license header.
+
 v2.2.11
 ------
 
