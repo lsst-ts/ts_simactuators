@@ -7,7 +7,7 @@ name = "ts_simactuators"
 description = "Python simulators for actuators."
 license = { text = "GPL" }
 classifiers = [ "Programming Language :: Python :: 3" ]
-urls = { documentation = "https://ts-simactuators.lsst.io", repository = "https://github.com/lsst-ts/ts_simactuators" }
+urls = { documentation = "https://ts-simactuators.lsst.io", source_code = "https://github.com/lsst-ts/ts_simactuators" }
 dynamic = [ "version" ]
 
 [tool.setuptools.dynamic]
