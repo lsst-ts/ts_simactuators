@@ -28,9 +28,7 @@ from lsst.ts import utils
 from . import base, base_point_to_point_actuator
 
 
-class CircularPointToPointActuator(
-    base_point_to_point_actuator.BasePointToPointActuator
-):
+class CircularPointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator):
     """Simulated circular actuator that moves to a specified position at
     constant velocity and halts.
 
@@ -51,9 +49,7 @@ class CircularPointToPointActuator(
         If ``speed <= 0``
     """
 
-    def __init__(
-        self, speed: float, start_position: typing.Optional[float] = None
-    ) -> None:
+    def __init__(self, speed: float, start_position: typing.Optional[float] = None) -> None:
         # The private fields _start_position and _end_position are not
         # necessarily in the range [0, 360). This is important for supporting
         # the ``direction`` parameter. The public accessors all wrap

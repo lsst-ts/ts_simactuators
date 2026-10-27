@@ -24,6 +24,7 @@ __all__ = ["CosineGenerator", "RampGenerator"]
 import typing
 
 import numpy as np
+
 from lsst.ts import utils
 
 
@@ -72,26 +73,21 @@ class CosineGenerator:
         self.naxes = len(center_positions)
         if self.naxes != len(amplitudes):
             raise ValueError(
-                f"center_positions={center_positions} and amplitudes={amplitudes} "
-                "must have the same length"
+                f"center_positions={center_positions} and amplitudes={amplitudes} must have the same length"
             )
         if self.naxes != len(max_speeds):
             raise ValueError(
-                f"center_positions={center_positions} and max_speeds={max_speeds} "
-                "must have the same length"
+                f"center_positions={center_positions} and max_speeds={max_speeds} must have the same length"
             )
         for i in range(self.naxes):
             if max_speeds[i] == 0 and amplitudes[i] != 0:
                 raise ValueError(
-                    f"max_speeds={max_speeds} zero and amplitudes={amplitudes} nonzero "
-                    "for one or more axes"
+                    f"max_speeds={max_speeds} zero and amplitudes={amplitudes} nonzero for one or more axes"
                 )
         self.center_position_arr = np.array(center_positions, dtype=float)
         self.amplitude_arr = np.array(amplitudes, dtype=float)
         self.end_position_arr = self.center_position_arr + self.amplitude_arr
-        self.max_velocity_arr = np.copysign(
-            np.array(max_speeds, dtype=float), self.amplitude_arr
-        )
+        self.max_velocity_arr = np.copysign(np.array(max_speeds, dtype=float), self.amplitude_arr)
         if np.all(self.amplitude_arr == 0):
             raise ValueError("amplitude must be nonzero for at least one axis")
         self.advance_time = float(advance_time)
@@ -100,22 +96,13 @@ class CosineGenerator:
         # Avoid needless divide-by-zero warnings.
         # Set safe_max_velocity_divisor_arr to an arbitrary nonzero value
         # for those axes with no motion (self.amplitude_arr == 0).
-        safe_max_velocity_divisor_arr = np.where(
-            self.amplitude_arr == 0, 1, self.max_velocity_arr
-        )
+        safe_max_velocity_divisor_arr = np.where(self.amplitude_arr == 0, 1, self.max_velocity_arr)
         # Period; 0 for axes with no amplitude
-        self.period_arr = (
-            np.abs(self.amplitude_arr)
-            * 2
-            * np.pi
-            / np.abs(safe_max_velocity_divisor_arr)
-        )
+        self.period_arr = np.abs(self.amplitude_arr) * 2 * np.pi / np.abs(safe_max_velocity_divisor_arr)
 
         safe_period_divisor_arr = np.where(self.amplitude_arr == 0, 1, self.period_arr)
         # Inverse period; 0 for axes with no amplitude
-        self.inverse_period_arr = np.where(
-            self.amplitude_arr == 0, 1, 1 / safe_period_divisor_arr
-        )
+        self.inverse_period_arr = np.where(self.amplitude_arr == 0, 1, 1 / safe_period_divisor_arr)
 
     @property
     def duration(self) -> float:
@@ -143,9 +130,7 @@ class CosineGenerator:
         while tai < max_tai:
             frac_period_arr = (tai - start_tai) * self.inverse_period_arr
             angle_rad_arr = 2 * np.pi * frac_period_arr
-            position_arr = (
-                self.amplitude_arr * np.cos(angle_rad_arr) + self.center_position_arr
-            )
+            position_arr = self.amplitude_arr * np.cos(angle_rad_arr) + self.center_position_arr
             velocity_arr = -self.max_velocity_arr * np.sin(angle_rad_arr)
             for i in range(self.naxes):
                 if self.amplitude_arr[i] == 0 or frac_period_arr[i] > 1:
@@ -210,8 +195,7 @@ class RampGenerator:
             )
         if self.naxes != len(speeds):
             raise ValueError(
-                f"start_positions={start_positions} and self.speed_arr={speeds} "
-                "must have the same length"
+                f"start_positions={start_positions} and self.speed_arr={speeds} must have the same length"
             )
         self.start_position_arr = np.array(start_positions, dtype=float)
         self.end_position_arr = np.array(end_positions, dtype=float)
@@ -262,9 +246,7 @@ class RampGenerator:
         max_tai = np.max(end_tai_arr)
 
         while tai < max_tai:
-            position_arr = self.start_position_arr + self.velocity_arr * (
-                tai - start_tai
-            )
+            position_arr = self.start_position_arr + self.velocity_arr * (tai - start_tai)
             velocity_arr = self.velocity_arr.copy()
             for i in range(self.naxes):
                 if tai > end_tai_arr[i]:

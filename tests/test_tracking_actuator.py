@@ -26,6 +26,7 @@ import unittest
 
 import numpy as np
 import pytest
+
 from lsst.ts import simactuators
 
 
@@ -237,9 +238,7 @@ class TestTrackingActuator(unittest.TestCase):
             (0, 0.1, -0.2),
             (0, 0.2, 0.7),
         ):
-            with self.subTest(
-                pos_ampl=pos_ampl, vel_off=vel_off, frac_phase=frac_phase
-            ):
+            with self.subTest(pos_ampl=pos_ampl, vel_off=vel_off, frac_phase=frac_phase):
                 self.check_sin_path(
                     pos_off=0,
                     pos_ampl=pos_ampl,
@@ -329,12 +328,8 @@ class TestTrackingActuator(unittest.TestCase):
                 actuator.stop(tai=tai_start_halt)
                 assert actuator.kind(tai_start_halt) == actuator.Kind.Stopping
                 segment_start_halt = actuator.path.at(tai_start_halt)
-                assert segment_before_stop.position == pytest.approx(
-                    segment_start_halt.position
-                )
-                assert segment_before_stop.velocity == pytest.approx(
-                    segment_start_halt.velocity
-                )
+                assert segment_before_stop.position == pytest.approx(segment_start_halt.position)
+                assert segment_before_stop.velocity == pytest.approx(segment_start_halt.velocity)
 
                 # the ending velocity and acceleration are, of course, 0
                 # and the current and target positions should match at the end
@@ -343,9 +338,7 @@ class TestTrackingActuator(unittest.TestCase):
                 assert segment_end_halt.velocity == 0
                 assert segment_end_halt.acceleration == 0
                 cmd_segment_end_halt = actuator.target.at(tai=tai_end_halt)
-                assert cmd_segment_end_halt.position == pytest.approx(
-                    segment_end_halt.position
-                )
+                assert cmd_segment_end_halt.position == pytest.approx(segment_end_halt.position)
                 assert cmd_segment_end_halt.velocity == 0
                 assert cmd_segment_end_halt.acceleration == 0
                 assert tai_end_halt > tai_start_halt
@@ -382,9 +375,7 @@ class TestTrackingActuator(unittest.TestCase):
                 actuator.abort(tai=t_abort)
                 assert actuator.kind(t_abort) == actuator.Kind.Stopped
                 segment_abort = actuator.path.at(t_abort)
-                assert segment_before_abort.position == pytest.approx(
-                    segment_abort.position
-                )
+                assert segment_before_abort.position == pytest.approx(segment_abort.position)
                 assert segment_abort.velocity == pytest.approx(0)
                 assert len(actuator.path) == 1
 
@@ -506,9 +497,7 @@ class TestTrackingActuator(unittest.TestCase):
             elif actuator.path.kind == actuator.Kind.Slewing:
                 nslew += 1
                 if ntrack > 0:
-                    self.fail(
-                        f"Slew found after tracking: nslew={nslew}; ntrack={ntrack}"
-                    )
+                    self.fail(f"Slew found after tracking: nslew={nslew}; ntrack={ntrack}")
 
             # check that the commanded PVT was properly recorded
             target_segment = actuator.target.at(cmd_t)
@@ -523,12 +512,8 @@ class TestTrackingActuator(unittest.TestCase):
                     test_t = cmd_interval * frac_dt + cmd_t
                     target_segment = actuator.target.at(test_t)
                     current_segment = actuator.path.at(test_t)
-                    pos_errors.append(
-                        current_segment.position - target_segment.position
-                    )
-                    vel_errors.append(
-                        current_segment.velocity - target_segment.velocity
-                    )
+                    pos_errors.append(current_segment.position - target_segment.position)
+                    vel_errors.append(current_segment.velocity - target_segment.velocity)
                     curr_vels.append(current_segment.velocity)
                     curr_accels.append(current_segment.acceleration)
         pos_err = np.abs(pos_errors).max()

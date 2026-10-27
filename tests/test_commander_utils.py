@@ -25,6 +25,7 @@ import unittest
 
 import numpy as np
 import pytest
+
 from lsst.ts import simactuators, utils
 
 
@@ -151,9 +152,7 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
         max_position_arr = np.array(center_positions)
         min_velocity_arr = np.zeros(3)
         max_velocity_arr = np.zeros(3)
-        for position_arr, velocity_arr, tai in zip(
-            positions_list, velocities_list, tais
-        ):
+        for position_arr, velocity_arr, tai in zip(positions_list, velocities_list, tais):
             min_position_arr = np.minimum(min_position_arr, position_arr)
             max_position_arr = np.maximum(max_position_arr, position_arr)
             min_velocity_arr = np.minimum(min_velocity_arr, velocity_arr)
@@ -161,27 +160,19 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
             dt_start = tai - start_tai
             if previous_tai is not None:
                 dt_previous = tai - previous_tai
-                predicted_position_arr = (
-                    previous_position_arr + previous_velocity_arr * dt_previous
-                )
+                predicted_position_arr = previous_position_arr + previous_velocity_arr * dt_previous
             for i in range(len(center_positions)):
                 if dt_start < predicted_durations[i]:
                     if previous_tai is not None:
-                        assert position_arr[i] == pytest.approx(
-                            predicted_position_arr[i], abs=0.01
-                        )
+                        assert position_arr[i] == pytest.approx(predicted_position_arr[i], abs=0.01)
                 else:
-                    assert position_arr[i] == pytest.approx(
-                        start_and_end_position_arr[i]
-                    )
+                    assert position_arr[i] == pytest.approx(start_and_end_position_arr[i])
                     assert velocity_arr[i] == 0
             previous_position_arr = position_arr
             previous_velocity_arr = velocity_arr
             previous_tai = tai
 
-        np.testing.assert_allclose(
-            max_position_arr, np.add(center_positions, np.abs(amplitudes)), atol=0.01
-        )
+        np.testing.assert_allclose(max_position_arr, np.add(center_positions, np.abs(amplitudes)), atol=0.01)
         np.testing.assert_allclose(
             min_position_arr,
             np.subtract(center_positions, np.abs(amplitudes)),
@@ -240,15 +231,11 @@ class TestCommanderUtils(unittest.IsolatedAsyncioTestCase):
 
         np.testing.assert_allclose(positions_list[0], start_positions)
         start_tai = tais[0]
-        for position_arr, velocity_arr, tai in zip(
-            positions_list, velocities_list, tais
-        ):
+        for position_arr, velocity_arr, tai in zip(positions_list, velocities_list, tais):
             dt = tai - start_tai
             for i in range(len(start_positions)):
                 if dt < predicted_durations[i]:
-                    assert position_arr[i] == pytest.approx(
-                        start_positions[i] + speeds[i] * dt
-                    )
+                    assert position_arr[i] == pytest.approx(start_positions[i] + speeds[i] * dt)
                     assert velocity_arr[i] == pytest.approx(speeds[i])
                 else:
                     assert position_arr[i] == pytest.approx(end_positions[i])

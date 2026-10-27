@@ -23,6 +23,7 @@ import itertools
 import unittest
 
 import pytest
+
 from lsst.ts import simactuators
 
 
@@ -72,9 +73,7 @@ class TestStopTestCase(unittest.TestCase):
             segment1 = path[1]
             dt = segment1.tai - segment0.tai
             assert dt > 0
-            pred_p1 = segment0.position + dt * (
-                segment0.velocity + dt * 0.5 * segment0.acceleration
-            )
+            pred_p1 = segment0.position + dt * (segment0.velocity + dt * 0.5 * segment0.acceleration)
             pred_v1 = segment0.velocity + dt * segment0.acceleration
             assert segment1.position == pytest.approx(pred_p1, abs=0.0001)
             assert segment1.velocity == pytest.approx(pred_v1, abs=0.0001)
@@ -135,10 +134,6 @@ class TestStopTestCase(unittest.TestCase):
 
         # max_acceleration must be >= 0
         with pytest.raises(ValueError):
-            simactuators.path.stop(
-                tai=tai, position=position, velocity=velocity, max_acceleration=0
-            )
+            simactuators.path.stop(tai=tai, position=position, velocity=velocity, max_acceleration=0)
         with pytest.raises(ValueError):
-            simactuators.path.stop(
-                tai=tai, position=position, velocity=velocity, max_acceleration=-1
-            )
+            simactuators.path.stop(tai=tai, position=position, velocity=velocity, max_acceleration=-1)

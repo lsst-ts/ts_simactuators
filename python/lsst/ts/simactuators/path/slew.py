@@ -116,8 +116,7 @@ def slew(
     #   (which can lead to dt1 < 0 for type 2 slews).
     if abs(start_velocity) > max_velocity * SLEW_FUDGE:
         raise ValueError(
-            "Telescope is moving too fast "
-            f"(|{start_velocity:0.4f}| > {SLEW_FUDGE} * {max_velocity})."
+            f"Telescope is moving too fast (|{start_velocity:0.4f}| > {SLEW_FUDGE} * {max_velocity})."
         )
     if abs(end_velocity) * SLEW_FUDGE > max_velocity:
         raise ValueError(
@@ -145,9 +144,7 @@ def slew(
         sign_dpBAi = sign_end_velocityA
     else:
         return path.Path(
-            path_segment.PathSegment(
-                tai=tai, position=start_position, velocity=start_velocity
-            ),
+            path_segment.PathSegment(tai=tai, position=start_position, velocity=start_velocity),
             kind=path.Kind.Slewing,
         )
 
@@ -194,9 +191,7 @@ def slew(
     # if resulting vel_mid is too big, reduce it to maximum allowed
     # and compute corresponding increased dt2.
     dt2 = 0.0
-    vPB_temp = (
-        (0.5 * start_accel * dt2) ** 2 + half_end_velocityAsq + start_accel * dpBAi
-    )
+    vPB_temp = (0.5 * start_accel * dt2) ** 2 + half_end_velocityAsq + start_accel * dpBAi
     if vPB_temp < 0.0:
         raise RuntimeError("Bug! Tried to compute square root of negative value.")
     vPB = math.copysign(math.sqrt(vPB_temp), start_accel) - 0.5 * start_accel * dt2
@@ -243,15 +238,11 @@ def slew(
         )
         segment2 = segments[-1].at(dt1)
     else:
-        segment2 = path_segment.PathSegment(
-            tai=0, position=start_position, velocity=start_velocity
-        )
+        segment2 = path_segment.PathSegment(tai=0, position=start_position, velocity=start_velocity)
     if dt2 > 0:
         # There is a segment 2 with no acceleration
         segments.append(
-            path_segment.PathSegment(
-                tai=segment2.tai, position=segment2.position, velocity=segment2.velocity
-            )
+            path_segment.PathSegment(tai=segment2.tai, position=segment2.position, velocity=segment2.velocity)
         )
         segment3 = segments[-1].at(segment2.tai + dt2)
     else:
@@ -273,9 +264,7 @@ def slew(
         # If the last PathSegment has non-zero acceleraton then append
         # a segment with zero acceleration.
         segments.append(
-            path_segment.PathSegment(
-                tai=segment4.tai, position=segment4.position, velocity=segment4.velocity
-            )
+            path_segment.PathSegment(tai=segment4.tai, position=segment4.position, velocity=segment4.velocity)
         )
     for segment in segments:
         segment.tai += tai

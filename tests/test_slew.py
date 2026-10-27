@@ -24,6 +24,7 @@ import math
 import unittest
 
 import pytest
+
 from lsst.ts import simactuators
 
 
@@ -82,9 +83,7 @@ class TestSlew(unittest.TestCase):
             segment1 = path[i + 1]
             dt = segment1.tai - segment0.tai
             assert dt > 0
-            pred_p1 = segment0.position + dt * (
-                segment0.velocity + dt * 0.5 * segment0.acceleration
-            )
+            pred_p1 = segment0.position + dt * (segment0.velocity + dt * 0.5 * segment0.acceleration)
             pred_v1 = segment0.velocity + dt * segment0.acceleration
             assert segment1.position == pytest.approx(pred_p1, abs=0.0001)
             assert segment1.velocity == pytest.approx(pred_v1, abs=0.0001)
@@ -104,9 +103,7 @@ class TestSlew(unittest.TestCase):
             (-5, 0, 30),
             (0, 1),
         ):
-            with self.subTest(
-                start_position=start_position, start_velocity=start_velocity
-            ):
+            with self.subTest(start_position=start_position, start_velocity=start_velocity):
                 path = simactuators.path.slew(
                     tai=tai,
                     start_position=start_position,
@@ -180,9 +177,7 @@ class TestSlew(unittest.TestCase):
                 assert path[0].tai == pytest.approx(tai)
                 assert path[0].position == pytest.approx(start_position)
                 assert path[0].velocity == pytest.approx(0)
-                assert path[0].acceleration == pytest.approx(
-                    math.copysign(max_acceleration, dpos)
-                )
+                assert path[0].acceleration == pytest.approx(math.copysign(max_acceleration, dpos))
 
                 predicted_dt1 = dt_max_velocity
                 predicted_t1 = tai + predicted_dt1
@@ -258,9 +253,7 @@ class TestSlew(unittest.TestCase):
                 assert path[0].tai == pytest.approx(tai)
                 assert path[0].position == pytest.approx(start_position)
                 assert path[0].velocity == pytest.approx(0)
-                assert path[0].acceleration == pytest.approx(
-                    math.copysign(max_acceleration, dpos)
-                )
+                assert path[0].acceleration == pytest.approx(math.copysign(max_acceleration, dpos))
 
                 predicted_dt1 = math.sqrt(abs(dpos) / max_acceleration)
                 predicted_t1 = tai + predicted_dt1
