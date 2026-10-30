@@ -24,6 +24,7 @@ import typing
 import unittest
 
 import pytest
+
 from lsst.ts import simactuators, utils
 
 
@@ -41,9 +42,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
                 assert actuator.start_position == start_position
             else:
                 # The reported angle is wrapped
-                utils.assert_angles_almost_equal(
-                    actuator.start_position, start_position
-                )
+                utils.assert_angles_almost_equal(actuator.start_position, start_position)
             assert actuator.end_position == actuator.start_position
             assert actuator.start_tai == pytest.approx(tai0, abs=time_slop)
             assert actuator.start_tai == actuator.end_tai
@@ -73,24 +72,16 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
 
             # Move in both directions, crossing the wrap at 0.
             # Test some with a specified start_tai and others without.
-            await self.check_set_position(
-                start_position=3, end_position=4, start_tai=tai, **kwargs
-            )
-            await self.check_set_position(
-                start_position=4, end_position=3, start_tai=tai, **kwargs
-            )
-            await self.check_set_position(
-                start_position=355, end_position=2, start_tai=tai, **kwargs
-            )
+            await self.check_set_position(start_position=3, end_position=4, start_tai=tai, **kwargs)
+            await self.check_set_position(start_position=4, end_position=3, start_tai=tai, **kwargs)
+            await self.check_set_position(start_position=355, end_position=2, start_tai=tai, **kwargs)
             await self.check_set_position(start_position=2, end_position=355, **kwargs)
             await self.check_set_position(start_position=6, end_position=-5, **kwargs)
             await self.check_set_position(start_position=-5, end_position=6, **kwargs)
 
             # A move to the start position should have no effect.
             pos = 1
-            actuator = simactuators.CircularPointToPointActuator(
-                start_position=pos, speed=2
-            )
+            actuator = simactuators.CircularPointToPointActuator(start_position=pos, speed=2)
             duration = actuator.set_position(pos, **kwargs)
             assert duration == 0
             utils.assert_angles_almost_equal(actuator.start_position, pos)
@@ -154,9 +145,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             assert actuator.start_tai == kwargs["start_tai"]
         else:
             assert actuator.start_tai == pytest.approx(tai0, abs=time_slop)
-        assert actuator.start_tai + predicted_duration == pytest.approx(
-            actuator.end_tai, abs=0.000001
-        )
+        assert actuator.start_tai + predicted_duration == pytest.approx(actuator.end_tai, abs=0.000001)
         utils.assert_angles_almost_equal(actuator.end_position, end_position)
         if direction == simactuators.Direction.NEAREST:
             predicted_direction = (
@@ -199,9 +188,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             start_position=start_position,
             speed=speed,
         )
-        duration = actuator.set_position(
-            target_position, direction=simactuators.Direction.NEAREST
-        )
+        duration = actuator.set_position(target_position, direction=simactuators.Direction.NEAREST)
         assert actuator.end_position == target_position
         assert actuator.moving(utils.current_tai())
         # Let the actuator move for some arbitrary time
@@ -221,9 +208,7 @@ class TestCircularPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         move_time = actuator.end_tai - actuator.start_tai
         assert move_time > 0
         predicted_end_position = start_position + speed * move_time
-        assert predicted_end_position == pytest.approx(
-            actuator.end_position, abs=0.000001
-        )
+        assert predicted_end_position == pytest.approx(actuator.end_position, abs=0.000001)
         assert not actuator.moving(actuator.end_tai)
         assert actuator.position(actuator.end_tai) == actuator.end_position
         assert actuator.start_position == start_position

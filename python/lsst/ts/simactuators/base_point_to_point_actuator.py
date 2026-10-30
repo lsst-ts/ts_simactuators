@@ -85,9 +85,7 @@ class BasePointToPointActuator:
         otherwise, including for a null movement or if never moved.
         """
         return (
-            base.Direction.POSITIVE
-            if self._end_position >= self._start_position
-            else base.Direction.NEGATIVE
+            base.Direction.POSITIVE if self._end_position >= self._start_position else base.Direction.NEGATIVE
         )
 
     @property
@@ -181,9 +179,7 @@ class BasePointToPointActuator:
         self._end_position = self.position(tai)
         self._end_tai = tai
 
-    def _set_position(
-        self, start_position: float, start_tai: float, end_position: float
-    ) -> float:
+    def _set_position(self, start_position: float, start_tai: float, end_position: float) -> float:
         """Set start and end positions and times and return move duration."""
         self._start_position = start_position
         self._start_tai = start_tai

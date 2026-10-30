@@ -61,9 +61,7 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
         start_position: typing.Optional[float] = None,
     ) -> None:
         if min_position >= max_position:
-            raise ValueError(
-                f"min_position={min_position} must be < max_position={max_position}"
-            )
+            raise ValueError(f"min_position={min_position} must be < max_position={max_position}")
         if start_position is None:
             if min_position <= 0 <= max_position:
                 start_position = 0
@@ -71,17 +69,14 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
                 start_position = min_position
         if not min_position <= start_position <= max_position:
             raise ValueError(
-                f"start_position={start_position} must be in range "
-                f"[{min_position}, {max_position}]"
+                f"start_position={start_position} must be in range [{min_position}, {max_position}]"
             )
 
         self.min_position = min_position
         self.max_position = max_position
         super().__init__(start_position=start_position, speed=speed)
 
-    def set_position(
-        self, position: float, start_tai: typing.Optional[float] = None
-    ) -> float:
+    def set_position(self, position: float, start_tai: typing.Optional[float] = None) -> float:
         """Set a new target position and return the move duration.
 
         Parameters
@@ -98,12 +93,8 @@ class PointToPointActuator(base_point_to_point_actuator.BasePointToPointActuator
             If position < self.min_position or > self.max_position.
         """
         if position < self.min_position or position > self.max_position:
-            raise ValueError(
-                f"position={position} not in range [{self.min_position}, {self.max_position}]"
-            )
+            raise ValueError(f"position={position} not in range [{self.min_position}, {self.max_position}]")
         if start_tai is None:
             start_tai = utils.current_tai()
         start_position = self.position(start_tai)
-        return self._set_position(
-            start_position=start_position, start_tai=start_tai, end_position=position
-        )
+        return self._set_position(start_position=start_position, start_tai=start_tai, end_position=position)

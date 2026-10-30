@@ -21,3 +21,5 @@ pytest_session.txt
 .isort.cfg
 .mypy.ini
 .LICENSE.txt
+.ruff.toml
+towncrier.toml

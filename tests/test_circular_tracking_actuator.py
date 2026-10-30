@@ -23,6 +23,7 @@ import itertools
 import unittest
 
 import pytest
+
 from lsst.ts import simactuators, utils
 
 
@@ -143,14 +144,10 @@ class TestCircularTrackingActuator(unittest.TestCase):
 
         targets = dict()
         paths = dict()
-        predicted_wrapped_target_position = utils.angle_wrap_nonnegative(
-            end_segment.position
-        ).deg
+        predicted_wrapped_target_position = utils.angle_wrap_nonnegative(end_segment.position).deg
         for direction in simactuators.Direction:
             actuator.target = start_segment
-            actuator.path = simactuators.path.Path(
-                start_segment, kind=actuator.Kind.Tracking
-            )
+            actuator.path = simactuators.path.Path(start_segment, kind=actuator.Kind.Tracking)
             actuator.set_target(
                 tai=end_segment.tai,
                 position=end_segment.position,
@@ -159,9 +156,7 @@ class TestCircularTrackingActuator(unittest.TestCase):
             )
             assert actuator.target.tai == end_segment.tai
             assert actuator.target.velocity == end_segment.velocity
-            assert actuator.target.position == pytest.approx(
-                predicted_wrapped_target_position
-            )
+            assert actuator.target.position == pytest.approx(predicted_wrapped_target_position)
             targets[direction] = actuator.target
             paths[direction] = actuator.path
 

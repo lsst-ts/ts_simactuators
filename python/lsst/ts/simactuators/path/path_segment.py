@@ -125,9 +125,7 @@ class PathSegment:
         dt = end_tai - start_tai
         # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
-            raise ValueError(
-                f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}"
-            )
+            raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
 
         mean_vel = (end_position - start_position) / dt
         start_accel = (3 * mean_vel - (2 * start_velocity + end_velocity)) * 2 / dt
@@ -165,9 +163,7 @@ class PathSegment:
         dt = end_tai - self.tai
         # Avoid overflow
         if dt <= math.sqrt(sys.float_info.min):
-            raise ValueError(
-                f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}"
-            )
+            raise ValueError(f"dt={dt} <= math.sqrt(sys.float_info.min))={math.sqrt(sys.float_info.min)}")
 
         # Compute maximum |velocity| (max_velocity); this may occur
         # at the endpoints or at time t_vex = -start_accel/jerk.
@@ -195,9 +191,7 @@ class PathSegment:
             t_pex_zeroj = max(-self.velocity / self.acceleration, 0.0)
         else:
             t_pex_zeroj = 0.0
-        sqrt_arg = (self.acceleration * self.acceleration) - (
-            2.0 * self.velocity * self.jerk
-        )
+        sqrt_arg = (self.acceleration * self.acceleration) - (2.0 * self.velocity * self.jerk)
         if sqrt_arg < 0.0:
             t_pexArr[0] = 0.0
             t_pexArr[1] = 0.0
@@ -212,9 +206,7 @@ class PathSegment:
                     t_pexArr[branch] = t_pex_zeroj
         for branch in range(2):
             t_branch = t_pexArr[branch]
-            vel_branch = self.velocity + (t_branch / 2) * (
-                self.acceleration + (t_branch / 3) * self.jerk
-            )
+            vel_branch = self.velocity + (t_branch / 2) * (self.acceleration + (t_branch / 3) * self.jerk)
             pexArr[branch] = self.position + t_branch * vel_branch
 
         min_position = min(self.position, end_segment.position, pexArr[0], pexArr[1])
@@ -244,8 +236,7 @@ class PathSegment:
         return PathSegment(
             tai=tai,
             position=self.position
-            + dt
-            * (self.velocity + dt * (0.5 * self.acceleration + dt * self.jerk / 6.0)),
+            + dt * (self.velocity + dt * (0.5 * self.acceleration + dt * self.jerk / 6.0)),
             velocity=self.velocity + dt * (self.acceleration + dt * (0.5 * self.jerk)),
             acceleration=self.acceleration + dt * self.jerk,
             jerk=self.jerk,

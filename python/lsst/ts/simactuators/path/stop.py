@@ -26,9 +26,7 @@ import math
 from . import path, path_segment
 
 
-def stop(
-    tai: float, position: float, velocity: float, max_acceleration: float
-) -> path.Path:
+def stop(tai: float, position: float, velocity: float, max_acceleration: float) -> path.Path:
     """Compute a path to stop as quickly as possible,
     starting from a path of constant velocity.
 
@@ -58,9 +56,7 @@ def stop(
         raise ValueError(f"max_acceleration={max_acceleration} < 0")
 
     if velocity == 0:
-        return path.Path(
-            path_segment.PathSegment(tai=tai, position=position), kind=path.Kind.Stopped
-        )
+        return path.Path(path_segment.PathSegment(tai=tai, position=position), kind=path.Kind.Stopped)
 
     segments = []
     # tai is large enough that small time changes
@@ -71,9 +67,7 @@ def stop(
     acceleration = -math.copysign(max_acceleration, velocity)
     p1 = position + dt * (velocity + dt * 0.5 * acceleration)
     segments.append(
-        path_segment.PathSegment(
-            tai=0, position=position, velocity=velocity, acceleration=acceleration
-        )
+        path_segment.PathSegment(tai=0, position=position, velocity=velocity, acceleration=acceleration)
     )
     segments.append(path_segment.PathSegment(tai=dt, position=p1, velocity=0))
 

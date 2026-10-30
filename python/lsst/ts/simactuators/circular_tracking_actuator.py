@@ -145,9 +145,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
         new_path = self._compute_directed_path(
             tai=tai, position=wrapped_position, velocity=velocity, direction=direction
         )
-        self.target = path.PathSegment(
-            tai=tai, position=wrapped_position, velocity=velocity
-        )
+        self.target = path.PathSegment(tai=tai, position=wrapped_position, velocity=velocity)
         self.path = new_path
 
     def _compute_directed_path(
@@ -184,9 +182,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
             else:
                 wrapped_position2 = wrapped_position1 - 360
             paths = [
-                self._compute_path(
-                    tai=tai, position=wrapped_position, velocity=velocity
-                )
+                self._compute_path(tai=tai, position=wrapped_position, velocity=velocity)
                 for wrapped_position in (wrapped_position1, wrapped_position2)
             ]
             paths.sort(key=lambda path: path[-1].tai)
@@ -199,9 +195,7 @@ class CircularTrackingActuator(tracking_actuator.TrackingActuator):
 
             wrapped_position = current_position + delta_position
 
-            path = self._compute_path(
-                tai=tai, position=wrapped_position, velocity=velocity
-            )
+            path = self._compute_path(tai=tai, position=wrapped_position, velocity=velocity)
 
             # Offset the computed path positions so they are in the
             # correct wrap relative to the ``position`` argument.

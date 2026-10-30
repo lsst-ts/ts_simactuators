@@ -94,9 +94,7 @@ class TrackingActuator:
         start_position: typing.Optional[float] = None,
     ) -> None:
         if min_position >= max_position:
-            raise ValueError(
-                f"min_position={min_position} must be < max_position={max_position}"
-            )
+            raise ValueError(f"min_position={min_position} must be < max_position={max_position}")
         if max_velocity <= 0:
             raise ValueError(f"max_velocity={max_velocity} must be > 0")
         if max_acceleration <= 0:
@@ -113,20 +111,14 @@ class TrackingActuator:
             else:
                 start_position = min_position
         if start_position < min_position:
-            raise ValueError(
-                f"start_position={start_position} < min_position={min_position}"
-            )
+            raise ValueError(f"start_position={start_position} < min_position={min_position}")
         if start_position > max_position:
-            raise ValueError(
-                f"start_position={start_position} > max_position={max_position}"
-            )
+            raise ValueError(f"start_position={start_position} > max_position={max_position}")
 
         if tai is None:
             tai = utils.current_tai()
         self.target = path_m.PathSegment(tai=tai, position=start_position)
-        self.path = path_m.Path(
-            path_m.PathSegment(tai=tai, position=start_position), kind=self.Kind.Stopped
-        )
+        self.path = path_m.Path(path_m.PathSegment(tai=tai, position=start_position), kind=self.Kind.Stopped)
         self._ntrack = 0
 
     def set_target(self, tai: float, position: float, velocity: float) -> None:
@@ -226,9 +218,7 @@ class TrackingActuator:
             tai = utils.current_tai()
         if position is None:
             position = self.path.at(tai).position
-        self.path = path_m.Path(
-            path_m.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped
-        )
+        self.path = path_m.Path(path_m.PathSegment(tai=tai, position=position), kind=self.Kind.Stopped)
 
     def kind(self, tai: typing.Optional[float] = None) -> path_m.Kind:
         """Kind of path at the specified time.
@@ -259,9 +249,7 @@ class TrackingActuator:
             return self.Kind.Stopped
         return self.path.kind
 
-    def _compute_path(
-        self, tai: float, position: float, velocity: float
-    ) -> path_m.Path:
+    def _compute_path(self, tai: float, position: float, velocity: float) -> path_m.Path:
         """Compute a trajectory path to the specified target position,
         velocity and time.
 

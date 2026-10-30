@@ -26,6 +26,7 @@ import unittest
 
 import numpy as np
 import pytest
+
 from lsst.ts import simactuators
 
 
@@ -70,9 +71,7 @@ class TestPathSegment(unittest.TestCase):
         desired_max_position = max(start_position, end_position)
         desired_max_velocity = max(abs(start_velocity), abs(end_velocity))
         for t in np.linspace(start=0, stop=dt, num=100):
-            pt = start_position + t * (
-                start_velocity + t * (0.5 * start_accel + t * jerk / 6)
-            )
+            pt = start_position + t * (start_velocity + t * (0.5 * start_accel + t * jerk / 6))
             vt = start_velocity + t * (start_accel + t * 0.5 * jerk)
             desired_min_position = min(pt, desired_min_position)
             desired_max_position = max(pt, desired_max_position)
@@ -150,19 +149,12 @@ class TestPathSegment(unittest.TestCase):
                 # `PathSegment` (to avoid an exact copy),
                 # so the computed values will be slightly different,
                 # especially position and to a lessar extent velocity.
-                expected_pos = (
-                    position
-                    + velocity * dt
-                    + acceleration * dt * dt / 2
-                    + jerk * dt * dt * dt / 6
-                )
+                expected_pos = position + velocity * dt + acceleration * dt * dt / 2 + jerk * dt * dt * dt / 6
                 expected_vel = velocity + acceleration * dt + jerk * dt * dt / 2
                 expected_accel = acceleration + jerk * dt
                 assert new_segment.tai == new_tai
                 assert new_segment.position == pytest.approx(expected_pos, abs=0.00001)
-                assert new_segment.velocity == pytest.approx(
-                    expected_vel, abs=0.0000001
-                )
+                assert new_segment.velocity == pytest.approx(expected_vel, abs=0.0000001)
                 assert new_segment.acceleration == pytest.approx(expected_accel)
                 assert new_segment.jerk == jerk
 

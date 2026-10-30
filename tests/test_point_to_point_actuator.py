@@ -23,6 +23,7 @@ import asyncio
 import unittest
 
 import pytest
+
 from lsst.ts import simactuators, utils
 
 
@@ -53,9 +54,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
                     assert actuator.velocity(tai) == 0
                     assert not actuator.moving(tai)
                     predicted_remaining_time = 0 if dt >= 0 else -dt
-                    assert actuator.remaining_time(tai) == pytest.approx(
-                        predicted_remaining_time
-                    )
+                    assert actuator.remaining_time(tai) == pytest.approx(predicted_remaining_time)
 
                 assert actuator.position() == good_start_position
                 assert actuator.velocity() == 0
@@ -130,9 +129,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         actuator.set_position(position=1, start_tai=start_tai)
         assert actuator.start_tai == start_tai
 
-    async def check_set_position(
-        self, start_position: float, end_position: float
-    ) -> None:
+    async def check_set_position(self, start_position: float, end_position: float) -> None:
         if start_position == end_position:
             raise ValueError("start_position must not equal end_position")
         min_position = min(start_position, end_position) - 1
@@ -158,9 +155,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         assert duration == pytest.approx(predicted_duration)
         assert actuator.start_tai == pytest.approx(tai0, abs=time_slop)
         assert remaining_time == pytest.approx(duration, abs=time_slop)
-        assert actuator.start_tai + predicted_duration == pytest.approx(
-            actuator.end_tai, abs=0.000001
-        )
+        assert actuator.start_tai + predicted_duration == pytest.approx(actuator.end_tai, abs=0.000001)
         assert actuator.end_position == end_position
         predicted_direction = (
             simactuators.Direction.POSITIVE
@@ -180,12 +175,8 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         ):
             assert not actuator.moving(tai)
             assert actuator.velocity(tai) == 0
-            predicted_remaining_time = (
-                actuator.end_tai - tai if actuator.end_tai > tai else 0
-            )
-            assert actuator.remaining_time(tai) == pytest.approx(
-                predicted_remaining_time
-            )
+            predicted_remaining_time = actuator.end_tai - tai if actuator.end_tai > tai else 0
+            assert actuator.remaining_time(tai) == pytest.approx(predicted_remaining_time)
 
         # The actuator should be moving during the move.
         for tai in (
@@ -196,9 +187,7 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
             assert actuator.moving(tai)
             assert actuator.velocity(tai) == predicted_speed
             predicted_remaining_time = actuator.end_tai - tai
-            assert actuator.remaining_time(tai) == pytest.approx(
-                predicted_remaining_time
-            )
+            assert actuator.remaining_time(tai) == pytest.approx(predicted_remaining_time)
 
         # Try moving out of bounds.
         for bad_end_position in (
@@ -236,16 +225,12 @@ class TestPointToPointActuator(unittest.IsolatedAsyncioTestCase):
         time_slop = utils.current_tai() - tai0
         assert tai0 == pytest.approx(actuator.end_tai, abs=time_slop)
         position_slop = time_slop * speed
-        assert actuator.end_position == pytest.approx(
-            actuator.position(tai0), abs=position_slop
-        )
+        assert actuator.end_position == pytest.approx(actuator.position(tai0), abs=position_slop)
 
         move_time = actuator.end_tai - actuator.start_tai
         assert move_time > 0
         predicted_end_position = start_position + speed * move_time
-        assert predicted_end_position == pytest.approx(
-            actuator.end_position, abs=0.0000001
-        )
+        assert predicted_end_position == pytest.approx(actuator.end_position, abs=0.0000001)
         assert not actuator.moving(actuator.end_tai)
         assert actuator.position(actuator.end_tai) == actuator.end_position
         assert actuator.start_position == start_position
